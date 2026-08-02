@@ -281,6 +281,7 @@ label.lbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:upper
 <script>
 /* ======================= ESTADO / PERSISTÊNCIA ======================= */
 const STORAGE_KEY='flashcardsAppData';
+const CHUNK_MAX_CHARS=25000;
 let data=loadData();
 let currentDeckDetailId=null;
 let studyQueue=[];
@@ -678,6 +679,29 @@ function updateCharCount(){
   document.getElementById('char-count').textContent=`${len.toLocaleString('pt-BR')} caracteres`;
 }
 
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function splitIntoChunks(text,maxChars){
+  const paragraphs=text.split(/\n\s*\n/);
+  const chunks=[];
+  let current='';
+  for(let p of paragraphs){
+    while(p.length>maxChars){
+      if(current){chunks.push(current.trim());current='';}
+      chunks.push(p.slice(0,maxChars));
+      p=p.slice(maxChars);
+    }
+    if((current+'\n\n'+p).length>maxChars && current){
+      chunks.push(current.trim());
+      current=p;
+    }else{
+      current=current?current+'\n\n'+p:p;
+    }
+  }
+  if(current.trim())chunks.push(current.trim());
+  return chunks;
+}
+
 document.getElementById('generate-btn').addEventListener('click',async()=>{
   const texto=document.getElementById('extracted-text').value.trim();
   if(!texto){toast('Nada para enviar à IA','var(--red)');return;}
@@ -688,41 +712,52 @@ document.getElementById('generate-btn').addEventListener('click',async()=>{
   const btn=document.getElementById('generate-btn');
   const statusEl=document.getElementById('generate-status');
   btn.disabled=true;
-  statusEl.textContent='🤖 Gerando flashcards com IA...';
-  try{
-    const cards=await callGeminiForFlashcards(texto);
-    if(!cards.length)throw new Error('A IA não retornou nenhum flashcard. Tente outro trecho de texto.');
-    generatedReview=cards.map(c=>({id:genId(),pergunta:c.pergunta||'',resposta:c.resposta||'',categoria:c.categoria||'',keep:true}));
-    renderReviewList();
-    document.getElementById('review-box').classList.remove('hidden');
-    document.getElementById('review-box').scrollIntoView({behavior:'smooth'});
-    statusEl.textContent=`✅ ${cards.length} flashcards gerados. Revise abaixo antes de salvar.`;
-  }catch(e){
-    statusEl.textContent='';
-    toast('Erro ao gerar flashcards: '+e.message,'var(--red)');
+
+  const chunks=splitIntoChunks(texto,CHUNK_MAX_CHARS);
+  let allCards=[];
+  let failedChunks=0;
+  for(let i=0;i<chunks.length;i++){
+    statusEl.textContent=`🤖 Gerando flashcards... parte ${i+1}/${chunks.length} (${allCards.length} cards até agora)`;
+    try{
+      const cards=await callGeminiForFlashcards(chunks[i]);
+      allCards=allCards.concat(cards);
+    }catch(e){
+      failedChunks++;
+    }
+    if(i<chunks.length-1)await sleep(1200);
   }
+
+  if(!allCards.length){
+    statusEl.textContent='';
+    toast('A IA não retornou nenhum flashcard. Verifique sua chave/cota.','var(--red)');
+    btn.disabled=false;
+    return;
+  }
+  generatedReview=allCards.map(c=>({id:genId(),pergunta:c.pergunta||'',resposta:c.resposta||'',categoria:c.categoria||'',keep:true}));
+  renderReviewList();
+  document.getElementById('review-box').classList.remove('hidden');
+  document.getElementById('review-box').scrollIntoView({behavior:'smooth'});
+  statusEl.textContent=`✅ ${allCards.length} flashcards gerados a partir de ${chunks.length} parte(s) do texto${failedChunks?` — ⚠️ ${failedChunks} parte(s) falharam (cota/erro)`:''}.`;
   btn.disabled=false;
 });
 
 async function callGeminiForFlashcards(texto){
-  const MAX_CHARS=60000;
-  const truncated=texto.length>MAX_CHARS?texto.slice(0,MAX_CHARS):texto;
   const prompt=`Você é um especialista em criar flashcards de alta qualidade para estudo.
-Analise o texto abaixo e gere flashcards no formato pergunta → resposta.
+Analise o texto abaixo (um trecho de um documento maior) e gere flashcards no formato pergunta → resposta.
 
 Regras:
-1. Crie entre 5 e 15 flashcards com base no conteúdo.
+1. Gere quantos flashcards forem necessários para cobrir TODOS os conceitos, definições, dados e processos importantes deste trecho — não economize e não limite a quantidade artificialmente. Um trecho denso pode gerar muitos cards; um trecho com pouco conteúdo relevante pode gerar poucos.
 2. Perguntas devem ser claras, objetivas e focadas nos pontos principais.
 3. Respostas devem ser concisas mas completas.
 4. Identifique conceitos-chave, definições, datas, processos e relações importantes.
-5. Priorize informações que realmente merecem ser memorizadas.
+5. Não é necessário resumir ou escolher só os "mais importantes" — se algo é testável, mereça virar um card.
 6. Se houver dados numéricos, inclua-os com precisão.
 7. Use linguagem simples e direta.
 8. Defina uma "categoria" curta para cada card (ex: "Conceitos Básicos", "Datas", "Processos").
 
 Texto para análise:
 """
-${truncated}
+${texto}
 """`;
 
   const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(data.settings.model)}:generateContent?key=${encodeURIComponent(data.settings.apiKey)}`;
@@ -730,7 +765,7 @@ ${truncated}
     contents:[{parts:[{text:prompt}]}],
     generationConfig:{
       temperature:0.3,
-      maxOutputTokens:2048,
+      maxOutputTokens:8192,
       responseMimeType:'application/json',
       responseSchema:{
         type:'OBJECT',
