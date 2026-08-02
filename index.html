@@ -157,7 +157,7 @@ label.lbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:upper
 .diff-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 
 /* ===== TOAST ===== */
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;box-shadow:var(--shadow2);z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;box-shadow:var(--shadow2);z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:min(90vw,560px);white-space:pre-wrap;text-align:left;word-break:break-word;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 
 @media(max-width:640px){
@@ -301,13 +301,13 @@ function loadData(){
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 
-function toast(msg,color){
+function toast(msg,color,duration){
   const t=document.getElementById('toast');
   t.textContent=msg;
   t.style.background=color||'var(--text)';
   t.classList.add('show');
   clearTimeout(t._timer);
-  t._timer=setTimeout(()=>t.classList.remove('show'),2600);
+  t._timer=setTimeout(()=>t.classList.remove('show'),duration||2600);
 }
 
 /* ======================= TEMA ======================= */
@@ -716,6 +716,7 @@ document.getElementById('generate-btn').addEventListener('click',async()=>{
   const chunks=splitIntoChunks(texto,CHUNK_MAX_CHARS);
   let allCards=[];
   let failedChunks=0;
+  let lastErrorMsg='';
   for(let i=0;i<chunks.length;i++){
     statusEl.textContent=`🤖 Gerando flashcards... parte ${i+1}/${chunks.length} (${allCards.length} cards até agora)`;
     try{
@@ -723,13 +724,14 @@ document.getElementById('generate-btn').addEventListener('click',async()=>{
       allCards=allCards.concat(cards);
     }catch(e){
       failedChunks++;
+      lastErrorMsg=e.message;
     }
     if(i<chunks.length-1)await sleep(1200);
   }
 
   if(!allCards.length){
     statusEl.textContent='';
-    toast('A IA não retornou nenhum flashcard. Verifique sua chave/cota.','var(--red)');
+    toast('Nenhum flashcard gerado. Erro: '+lastErrorMsg,'var(--red)',8000);
     btn.disabled=false;
     return;
   }
@@ -737,7 +739,7 @@ document.getElementById('generate-btn').addEventListener('click',async()=>{
   renderReviewList();
   document.getElementById('review-box').classList.remove('hidden');
   document.getElementById('review-box').scrollIntoView({behavior:'smooth'});
-  statusEl.textContent=`✅ ${allCards.length} flashcards gerados a partir de ${chunks.length} parte(s) do texto${failedChunks?` — ⚠️ ${failedChunks} parte(s) falharam (cota/erro)`:''}.`;
+  statusEl.textContent=`✅ ${allCards.length} flashcards gerados a partir de ${chunks.length} parte(s) do texto${failedChunks?` — ⚠️ ${failedChunks} parte(s) falharam: ${lastErrorMsg}`:''}.`;
   btn.disabled=false;
 });
 
@@ -794,15 +796,30 @@ ${texto}
   }
   const text=json?.candidates?.[0]?.content?.parts?.[0]?.text;
   if(!text)throw new Error('Resposta vazia da IA (verifique sua chave ou cota).');
-  let parsed;
+  const cards=extractFlashcardsLoose(text);
+  if(!cards.length)throw new Error('Não foi possível interpretar a resposta da IA. Início da resposta: '+text.slice(0,300));
+  return cards;
+}
+
+function extractFlashcardsLoose(text){
   try{
-    parsed=JSON.parse(text);
-  }catch(e){
-    const match=text.match(/\{[\s\S]*\}/);
-    if(match)parsed=JSON.parse(match[0]);
-    else throw new Error('Não foi possível interpretar a resposta da IA.');
+    const parsed=JSON.parse(text);
+    if(Array.isArray(parsed.flashcards))return parsed.flashcards;
+  }catch(e){}
+  const outer=text.match(/\{[\s\S]*\}/);
+  if(outer){
+    try{
+      const parsed=JSON.parse(outer[0]);
+      if(Array.isArray(parsed.flashcards))return parsed.flashcards;
+    }catch(e){}
   }
-  return Array.isArray(parsed.flashcards)?parsed.flashcards:[];
+  const objs=[];
+  const re=/\{[^{}]*"pergunta"[^{}]*\}/g;
+  let m;
+  while((m=re.exec(text))){
+    try{objs.push(JSON.parse(m[0]));}catch(e){}
+  }
+  return objs;
 }
 
 function renderReviewList(){
