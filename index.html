@@ -1,1082 +1,1008 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Excelência Hospitalar: DRG + Medicina Hospitalista — Prévia Executiva</title>
-<meta name="description" content="Prévia executiva navegável do programa Excelência Hospitalar: Implementação do Modelo DRG + Medicina Hospitalista — jornada, metodologia, painel de indicadores e resultados esperados.">
-<!--
-  Arquivo único, autocontido, sem dependências externas (sem CDN de fontes/ícones/scripts):
-  isso garante funcionamento 100% offline com duplo clique, sem necessidade de fallback.
-  Tipografia: Georgia (serifada, títulos) e a pilha padrão do sistema (corpo) — ambas nativas
-  em qualquer SO, não requerem download. Ícones são SVG inline.
--->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards IA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-  /* ---------- Tokens ---------- */
-  :root{
-    --navy:#1A2B3C;
-    --teal:#1F6F8B;
-    --teal-dark:#14505F;
-    --gray:#5A6672;
-    --bg-1:#EAF1F3;
-    --bg-2:#F4F8F9;
-    --white:#FFFFFF;
-    --line:#D7E2E6;
-    --serif: Georgia, 'Times New Roman', Times, serif;
-    --sans: system-ui, -apple-system, 'Segoe UI', Calibri, Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --shadow: 0 12px 32px -16px rgba(26,43,60,.22);
-    --radius: 10px;
-    --nav-h: 68px;
-  }
+:root{
+  --bg:#f7f7fb; --panel:#ffffff; --panel2:#fafafe; --border:#e5e7eb;
+  --text:#1f2333; --muted:#6b7280; --accent:#6366f1; --accent-dark:#4f46e5;
+  --accent-light:#eef2ff; --green:#16a34a; --green-light:#dcfce7;
+  --red:#dc2626; --red-light:#fee2e2; --orange:#d97706; --orange-light:#ffedd5;
+  --blue:#2563eb; --blue-light:#dbeafe;
+  --shadow:0 2px 12px rgba(0,0,0,0.06); --shadow2:0 8px 32px rgba(0,0,0,0.12);
+}
+[data-theme="dark"]{
+  --bg:#0f1117; --panel:#181b25; --panel2:#1f2330; --border:#2a2e3d;
+  --text:#e7e9f0; --muted:#8b8fa3; --accent:#818cf8; --accent-dark:#6366f1;
+  --accent-light:#252a45; --green:#4ade80; --green-light:#123321;
+  --red:#f87171; --red-light:#3a1a1a; --orange:#fbbf24; --orange-light:#3a2a10;
+  --blue:#60a5fa; --blue-light:#122a4a;
+  --shadow:0 2px 12px rgba(0,0,0,0.4); --shadow2:0 8px 32px rgba(0,0,0,0.5);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;transition:background .2s,color .2s;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea,select{font-family:inherit;}
+.hidden{display:none !important;}
 
-  /* ---------- Reset ---------- */
-  *,*::before,*::after{ box-sizing:border-box; }
-  html{ scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
-  body{
-    margin:0; background:var(--white); color:var(--navy);
-    font-family:var(--sans); line-height:1.65;
-    font-size: clamp(16px, 0.35vw + 15px, 18px);
-    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-  }
-  h1,h2,h3,h4{ font-family:var(--serif); font-weight:700; line-height:1.18; margin:0; color:var(--navy); }
-  p{ margin:0; }
-  ul{ margin:0; padding:0; list-style:none; }
-  a{ color:inherit; }
-  img,svg{ display:block; max-width:100%; }
-  button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
-  section{ scroll-margin-top: calc(var(--nav-h) + 14px); }
+/* ===== TOPBAR ===== */
+#topbar{position:sticky;top:0;z-index:100;background:var(--panel);border-bottom:1px solid var(--border);box-shadow:var(--shadow);}
+#topbar-inner{max-width:1100px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:8px;font-weight:900;font-size:18px;color:var(--accent);white-space:nowrap;}
+.brand span.ico{font-size:22px;}
+#tabs{display:flex;gap:4px;flex:1;flex-wrap:wrap;}
+.tab-btn{background:none;border:none;padding:10px 14px;border-radius:10px;font-weight:700;font-size:13px;color:var(--muted);transition:all .15s;}
+.tab-btn:hover{background:var(--accent-light);color:var(--accent);}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text);transition:all .15s;}
+.icon-btn:hover{background:var(--accent-light);border-color:var(--accent);}
 
-  .wrap{ width:100%; max-width:1180px; margin:0 auto; padding:0 clamp(20px,4vw,40px); }
-  .eyebrow{
-    font-family:var(--sans); font-weight:700; letter-spacing:.14em; text-transform:uppercase;
-    font-size:.76rem; color:var(--teal); margin-bottom:12px;
-  }
-  .section-head{ max-width:760px; margin-bottom:clamp(28px,4vw,48px); }
-  .section-head h2{ font-size:clamp(1.7rem,2.6vw,2.5rem); }
-  .section-head .lead{ margin-top:14px; color:var(--gray); font-size:1.05rem; max-width:640px; }
-  section > .wrap{ padding-top:clamp(56px,8vw,104px); padding-bottom:clamp(56px,8vw,104px); }
-  .band-tight > .wrap{ padding-top:clamp(40px,6vw,72px); padding-bottom:clamp(40px,6vw,72px); }
-  .bg-1{ background:var(--bg-2); }
-  .bg-2{ background:var(--bg-1); }
-  .bg-dark{ background: linear-gradient(155deg, var(--navy) 0%, var(--teal-dark) 100%); color:var(--white); }
-  .bg-dark .eyebrow{ color:#9FD3E3; }
-  .bg-dark h2, .bg-dark h3{ color:var(--white); }
+/* ===== MAIN ===== */
+#main{max-width:1100px;margin:0 auto;padding:24px 20px 60px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-  /* ---------- Reveal-on-scroll (discreet) ---------- */
-  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .65s ease, transform .65s ease; }
-  .reveal.is-visible{ opacity:1; transform:none; }
-  @media (prefers-reduced-motion: reduce){
-    html{ scroll-behavior:auto; }
-    .reveal{ transition:none; opacity:1; transform:none; }
-  }
+h2.screen-title{font-size:20px;font-weight:900;margin-bottom:4px;}
+p.screen-sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
 
-  /* ---------- Top nav ---------- */
-  .topnav{
-    position:sticky; top:0; z-index:60; height:var(--nav-h);
-    background:rgba(255,255,255,.94); backdrop-filter:saturate(160%) blur(8px);
-    border-bottom:1px solid var(--line);
-  }
-  .topnav .wrap{ height:100%; display:flex; align-items:center; justify-content:space-between; gap:24px; }
-  .brand{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
-  .brand-mark{
-    width:34px; height:34px; border-radius:8px; background:var(--navy);
-    color:var(--white); display:flex; align-items:center; justify-content:center;
-    font-family:var(--serif); font-weight:700; font-size:.95rem; letter-spacing:.02em;
-  }
-  .brand-text{ line-height:1.15; }
-  .brand-text strong{ display:block; font-size:.86rem; font-weight:700; color:var(--navy); }
-  .brand-text span{ display:block; font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--gray); }
-  .navlinks{
-    display:flex; gap:clamp(10px,1.6vw,26px); overflow-x:auto; scrollbar-width:none;
-    -ms-overflow-style:none; white-space:nowrap; padding:2px 2px;
-  }
-  .navlinks::-webkit-scrollbar{ display:none; }
-  .navlinks a{
-    text-decoration:none; font-size:.86rem; font-weight:600; color:var(--gray);
-    padding:8px 2px; border-bottom:2px solid transparent; transition:color .2s ease, border-color .2s ease;
-  }
-  .navlinks a:hover{ color:var(--navy); }
-  .navlinks a.active{ color:var(--teal-dark); border-color:var(--teal); }
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;font-size:13px;transition:all .15s;}
+.btn:hover{background:var(--accent-dark);transform:translateY(-1px);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+.btn.secondary:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.btn.danger{background:var(--red);}
+.btn.danger:hover{background:#b91c1c;}
+.btn.sm{padding:6px 12px;font-size:12px;border-radius:8px;}
 
-  /* ---------- Buttons ---------- */
-  .btn{
-    display:inline-flex; align-items:center; gap:10px; text-decoration:none;
-    font-weight:700; font-size:.94rem; padding:14px 26px; border-radius:999px;
-    transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
-    border:1.5px solid transparent; cursor:pointer;
-  }
-  .btn:hover{ transform:translateY(-2px); }
-  .btn-primary{ background:var(--white); color:var(--navy); }
-  .btn-primary:hover{ background:#EFF6F8; box-shadow:var(--shadow); }
-  .btn-ghost{ border-color:rgba(255,255,255,.55); color:var(--white); }
-  .btn-ghost:hover{ border-color:var(--white); background:rgba(255,255,255,.08); }
-  .btn-teal{ background:var(--teal); color:var(--white); }
-  .btn-teal:hover{ background:var(--teal-dark); box-shadow:var(--shadow); }
-  .btn svg{ width:16px; height:16px; }
+.card-box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);}
+.inp{background:var(--panel2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text);width:100%;}
+.inp:focus{outline:none;border-color:var(--accent);}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.5;}
+label.lbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;}
 
-  /* ---------- Hero ---------- */
-  .hero{ position:relative; overflow:hidden; }
-  .hero::before{
-    content:""; position:absolute; inset:0; opacity:.10; pointer-events:none;
-    background-image: repeating-linear-gradient(135deg, #fff 0 1px, transparent 1px 34px);
-  }
-  .hero .wrap{ position:relative; padding-top:clamp(64px,10vw,120px); padding-bottom:clamp(40px,6vw,64px); }
-  .badges{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px; }
-  .badge{
-    font-size:.78rem; font-weight:700; letter-spacing:.03em; padding:7px 14px;
-    border:1px solid rgba(255,255,255,.45); border-radius:999px; color:#EAF6F9;
-  }
-  .hero h1{ color:var(--white); font-size:clamp(2rem,4.4vw,3.4rem); max-width:920px; }
-  .hero .lead{ color:#DCEDF2; font-size:clamp(1.02rem,1.1vw+.6rem,1.2rem); max-width:660px; margin-top:20px; }
-  .hero .cta-row{ display:flex; flex-wrap:wrap; gap:16px; margin-top:34px; }
+.badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:10.5px;font-weight:800;}
+.badge.blue{background:var(--blue-light);color:var(--blue);}
+.badge.green{background:var(--green-light);color:var(--green);}
+.badge.orange{background:var(--orange-light);color:var(--orange);}
+.badge.red{background:var(--red-light);color:var(--red);}
+.badge.gray{background:var(--panel2);color:var(--muted);border:1px solid var(--border);}
 
-  .stat-strip{
-    margin-top:clamp(44px,7vw,72px); padding-top:clamp(28px,4vw,40px);
-    border-top:1px solid rgba(255,255,255,.22);
-    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
-  }
-  .stat-strip .item .num{ font-family:var(--sans); font-weight:800; font-size:clamp(1.5rem,2.4vw,2rem); color:var(--white); }
-  .stat-strip .item .cap{ margin-top:6px; font-size:.86rem; color:#C9E2E9; max-width:22ch; }
-  .stat-strip .foot{ grid-column:1/-1; margin-top:10px; font-size:.76rem; color:#9FC4CE; }
+/* ===== DECKS ===== */
+#decks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px;}
+.deck-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);transition:all .15s;}
+.deck-card:hover{box-shadow:var(--shadow2);transform:translateY(-2px);}
+.deck-card h3{font-size:15px;font-weight:900;margin-bottom:4px;}
+.deck-card p{font-size:12px;color:var(--muted);margin-bottom:12px;min-height:16px;}
+.deck-stats{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.deck-stats .stat{font-size:11px;color:var(--muted);}
+.deck-stats .stat b{color:var(--text);font-size:13px;}
+.deck-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty .ico{font-size:44px;margin-bottom:12px;}
 
-  /* ---------- Problema / Oportunidade ---------- */
-  .split{ display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(32px,5vw,64px); align-items:start; }
-  .quote-block{
-    border-left:3px solid var(--teal); padding-left:20px; margin-top:22px;
-    font-family:var(--serif); font-style:italic; color:var(--navy); font-size:1.08rem;
-  }
-  .card-plain{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:clamp(24px,3vw,32px); }
-  .card-plain h3{ font-size:1.15rem; margin-bottom:14px; }
-  .card-plain p + p{ margin-top:12px; }
-  .card-plain p{ color:var(--gray); }
+/* ===== DECK CONTEXT BAR ===== */
+.deck-ctx{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:12px 16px;}
+.deck-ctx select{max-width:260px;}
 
-  .opp-chart{ margin-top:20px; display:flex; flex-direction:column; gap:16px; }
-  .opp-row .opp-label{ display:flex; justify-content:space-between; font-size:.84rem; color:var(--gray); margin-bottom:6px; }
-  .opp-row .opp-label strong{ color:var(--navy); }
-  .opp-track{ height:26px; background:var(--bg-1); border-radius:6px; overflow:hidden; }
-  .opp-fill{ height:100%; border-radius:6px; display:flex; align-items:center; justify-content:flex-end; padding-right:10px; }
-  .opp-fill span{ font-size:.82rem; font-weight:800; color:var(--white); }
-  .opp-fill.now{ background:#9FC7D2; width:10%; }
-  .opp-fill.now span{ color:var(--navy); }
-  .opp-fill.future{ background:var(--teal-dark); width:78%; }
-  .opp-source{ font-size:.76rem; color:var(--gray); margin-top:4px; }
+/* ===== IMPORT ===== */
+.drop-zone{border:2px dashed var(--border);border-radius:16px;padding:40px 20px;text-align:center;background:var(--panel2);transition:all .15s;}
+.drop-zone.drag{border-color:var(--accent);background:var(--accent-light);}
+.drop-zone .ico{font-size:40px;margin-bottom:10px;}
+.step{margin-bottom:20px;}
+.step-title{font-weight:900;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.step-title .num{background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
+.page-range{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+.page-range input{width:70px;}
+.review-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;max-height:520px;overflow-y:auto;}
+.review-item{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;}
+.review-item textarea{min-height:44px;font-size:12.5px;}
+.review-item .rm{flex-shrink:0;}
 
-  /* ---------- Cards grid: Visão geral ---------- */
-  .cards-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-  .info-card{
-    background:var(--white); border:1px solid var(--line); border-top:3px solid var(--teal);
-    border-radius:var(--radius); padding:24px 22px; box-shadow:var(--shadow);
-  }
-  .info-card .tag{ font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); }
-  .info-card h3{ font-size:1.18rem; margin-top:10px; }
-  .info-card p{ margin-top:10px; color:var(--gray); font-size:.92rem; }
-  .info-card ul{ margin-top:10px; }
-  .info-card li{ color:var(--gray); font-size:.9rem; padding-left:14px; position:relative; margin-top:6px; }
-  .info-card li::before{ content:"—"; position:absolute; left:0; color:var(--teal); }
+/* ===== STUDY ===== */
+#study-area{display:flex;flex-direction:column;align-items:center;gap:18px;}
+.progress-wrap{width:100%;max-width:560px;}
+.progress-bar-bg{background:var(--border);border-radius:8px;height:8px;overflow:hidden;}
+.progress-bar-fill{background:var(--accent);height:100%;transition:width .2s;}
+.progress-txt{font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;}
+.flashcard{width:100%;max-width:560px;min-height:260px;background:var(--panel);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow2);padding:32px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;position:relative;transition:transform .12s;}
+.flashcard:active{transform:scale(.99);}
+.flashcard .side-lbl{position:absolute;top:14px;left:18px;font-size:10px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.flashcard .content{font-size:17px;font-weight:700;line-height:1.5;white-space:pre-wrap;}
+.flashcard .hint{position:absolute;bottom:14px;font-size:11px;color:var(--muted);}
+.flashcard .answer-content{color:var(--accent-dark);}
+.rate-row{display:flex;gap:8px;width:100%;max-width:560px;flex-wrap:wrap;justify-content:center;}
+.rate-btn{flex:1;min-width:100px;border:none;border-radius:12px;padding:14px 10px;font-weight:800;font-size:12.5px;color:#fff;transition:transform .12s;}
+.rate-btn:hover{transform:translateY(-2px);}
+.rate-btn.again{background:var(--red);}
+.rate-btn.hard{background:var(--orange);}
+.rate-btn.good{background:var(--blue);}
+.rate-btn.easy{background:var(--green);}
+.study-tools{display:flex;gap:8px;}
+.study-done{text-align:center;padding:60px 20px;}
+.study-done .ico{font-size:56px;margin-bottom:14px;}
 
-  /* ---------- Timeline / Jornada ---------- */
-  .timeline{ position:relative; }
-  .timeline::before{
-    content:""; position:absolute; left:23px; top:8px; bottom:8px; width:2px; background:var(--line);
-  }
-  .week{ position:relative; display:grid; grid-template-columns:48px 1fr; gap:20px; padding-bottom:14px; }
-  .week:last-child{ padding-bottom:0; }
-  .week-node{
-    position:relative; z-index:1; width:48px; height:48px; border-radius:50%;
-    background:var(--white); border:2px solid var(--teal); color:var(--teal-dark);
-    display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-weight:700; font-size:1.05rem;
-  }
-  .week-node.immersion{ background:var(--teal-dark); border-color:var(--teal-dark); color:var(--white); }
-  .week-card{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px; }
-  .week-btn{
-    width:100%; text-align:left; display:flex; align-items:center; gap:16px;
-    padding:18px 22px; justify-content:space-between;
-  }
-  .week-btn:hover{ background:var(--bg-2); }
-  .week-heading{ display:flex; flex-direction:column; gap:6px; min-width:0; }
-  .week-eyebrow{ font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--gray); }
-  .week-title{ font-family:var(--serif); font-size:1.14rem; font-weight:700; color:var(--navy); }
-  .immersion-chip{
-    display:inline-flex; align-items:center; gap:6px; width:fit-content;
-    font-size:.72rem; font-weight:700; color:var(--teal-dark); background:#E4F1F5;
-    border:1px solid #BFDDE6; padding:4px 10px; border-radius:999px; margin-top:2px;
-  }
-  .immersion-chip svg{ width:12px; height:12px; }
-  .chevron{ flex:0 0 auto; width:20px; height:20px; color:var(--teal); transition:transform .3s ease; }
-  .week-btn[aria-expanded="true"] .chevron{ transform:rotate(180deg); }
-  .week-panel{ padding:0 22px 22px 22px; border-top:1px solid var(--line); }
-  .week-panel[hidden]{ display:none; }
-  .week-panel-inner{ padding-top:18px; opacity:0; transform:translateY(-6px); transition:opacity .28s ease, transform .28s ease; }
-  .week-panel-inner.show{ opacity:1; transform:none; }
-  .week-panel p{ font-size:.95rem; color:var(--gray); }
-  .week-panel p strong{ color:var(--navy); font-weight:700; }
-  .week-panel p + p{ margin-top:10px; }
-  @media (prefers-reduced-motion: reduce){
-    .week-panel-inner{ transition:none; }
-    .chevron{ transition:none; }
-  }
+/* ===== BROWSER / CARDS LIST ===== */
+.filter-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-row input, .filter-row select{width:auto;flex:1;min-width:140px;}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.mini-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow);}
+.mini-card .q{font-weight:800;font-size:13px;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.mini-card .a{font-size:12px;color:var(--muted);margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.mini-card .badges{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.mini-card .row{display:flex;gap:6px;justify-content:flex-end;}
 
-  /* ---------- Metodologia ---------- */
-  .cards-4b{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-  .method-card{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px 22px; }
-  .method-num{ font-family:var(--serif); font-size:1.6rem; font-weight:700; color:var(--teal); }
-  .method-card h3{ font-size:1.05rem; margin-top:10px; }
-  .method-card p{ margin-top:8px; color:var(--gray); font-size:.9rem; }
-  .callout{
-    margin-top:32px; padding:22px 26px; border-radius:var(--radius); background:var(--navy); color:var(--white);
-    font-size:.98rem; display:flex; gap:16px; align-items:flex-start;
-  }
-  .callout svg{ width:22px; height:22px; flex:0 0 auto; color:#9FD3E3; margin-top:2px; }
-  .callout strong{ color:#DCEDF2; }
+/* ===== STATS ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.stat-tile{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;box-shadow:var(--shadow);}
+.stat-tile .n{font-size:24px;font-weight:900;color:var(--accent);}
+.stat-tile .l{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:4px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-row .l{width:80px;font-size:11.5px;color:var(--muted);flex-shrink:0;}
+.bar-track{flex:1;background:var(--border);border-radius:6px;height:14px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:6px;}
+.bar-row .v{width:36px;text-align:right;font-size:11.5px;font-weight:800;flex-shrink:0;}
 
-  /* ---------- Como é uma aula ---------- */
-  .class-bar{ display:flex; height:52px; border-radius:8px; overflow:hidden; gap:2px; margin-top:10px; }
-  .class-bar .seg{ display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.86rem; text-align:center; padding:0 6px; }
-  .seg-1{ background:#BFD9E1; color:var(--navy); flex-grow:20; }
-  .seg-2{ background:#8FB8C6; color:var(--navy); flex-grow:30; }
-  .seg-3{ background:var(--teal); color:var(--white); flex-grow:40; }
-  .seg-4{ background:var(--teal-dark); color:var(--white); flex-grow:30; }
-  .class-legend{ display:flex; justify-content:space-between; margin-top:8px; font-size:.74rem; color:var(--gray); }
-  .class-steps{ margin-top:34px; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-  .class-step{ border-top:3px solid var(--line); padding-top:14px; }
-  .class-step .sw{ display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:8px; vertical-align:middle; }
-  .class-step .t{ font-weight:700; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; color:var(--gray); }
-  .class-step h4{ font-size:1.02rem; margin-top:8px; }
-  .class-step p{ font-size:.88rem; color:var(--gray); margin-top:6px; }
+/* ===== MODAL ===== */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--panel);border-radius:18px;padding:24px;max-width:480px;width:100%;box-shadow:var(--shadow2);max-height:88vh;overflow-y:auto;}
+.modal h3{font-size:16px;font-weight:900;margin-bottom:16px;}
+.modal .field{margin-bottom:14px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+.diff-row{display:flex;gap:8px;}
+.diff-btn{flex:1;border:1.5px solid var(--border);background:var(--panel2);border-radius:10px;padding:8px;font-size:11.5px;font-weight:800;color:var(--muted);}
+.diff-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 
-  /* ---------- Painel de indicadores ---------- */
-  .kpi-note{
-    display:flex; gap:10px; align-items:center; font-size:.84rem; color:var(--gray);
-    background:var(--bg-1); border:1px solid var(--line); padding:10px 16px; border-radius:8px; margin-bottom:26px; width:fit-content;
-  }
-  .kpi-note svg{ width:16px; height:16px; color:var(--teal-dark); flex:0 0 auto; }
-  .kpi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
-  .kpi-card{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:20px 20px 18px; display:flex; flex-direction:column; gap:10px; }
-  .kpi-axis{ font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--teal); }
-  .kpi-name{ font-family:var(--serif); font-size:1.02rem; font-weight:700; color:var(--navy); }
-  .kpi-value{ font-family:var(--sans); font-weight:800; font-size:1.9rem; color:var(--navy); }
-  .kpi-formula{ font-size:.78rem; color:var(--gray); }
-  .kpi-track{ height:8px; border-radius:4px; background:var(--bg-1); overflow:hidden; margin-top:2px; }
-  .kpi-track i{ display:block; height:100%; background:var(--teal); border-radius:4px; }
-  .kpi-meta{ font-size:.76rem; color:var(--gray); }
-  .kpi-status{
-    margin-top:auto; display:inline-flex; align-items:center; gap:6px; font-size:.76rem; font-weight:700;
-    padding:5px 10px; border-radius:999px; width:fit-content;
-  }
-  .kpi-status svg{ width:13px; height:13px; }
-  .status-good{ color:var(--teal-dark); background:#E4F1F5; border:1px solid #BFDDE6; }
-  .status-watch{ color:var(--gray); background:var(--bg-2); border:1px solid var(--line); }
-  .kpi-foot{ margin-top:28px; font-size:.86rem; color:var(--gray); max-width:760px; }
+/* ===== TOAST ===== */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;box-shadow:var(--shadow2);z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 
-  /* ---------- Resultados esperados ---------- */
-  .results-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.14); border-radius:var(--radius); overflow:hidden; }
-  .result-tile{ background:var(--navy); padding:32px 26px; }
-  .result-tile .big{ font-family:var(--sans); font-weight:800; font-size:clamp(1.9rem,2.6vw,2.7rem); color:var(--white); line-height:1.05; }
-  .result-tile .desc{ margin-top:10px; font-size:.92rem; color:#D7E9EE; }
-  .result-tile .src{ margin-top:14px; font-size:.72rem; color:#8FB6C0; }
-
-  /* ---------- Entrega final ---------- */
-  .deliver-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-  .deliver-card{
-    background:var(--white); border:1px solid var(--line); border-radius:var(--radius);
-    padding:clamp(26px,3vw,34px); position:relative; padding-top:56px;
-  }
-  .deliver-icon{
-    position:absolute; top:24px; left:26px; width:40px; height:40px; border-radius:10px;
-    background:var(--teal-dark); color:var(--white); display:flex; align-items:center; justify-content:center;
-  }
-  .deliver-icon svg{ width:20px; height:20px; }
-  .deliver-card h3{ font-size:1.25rem; }
-  .deliver-card p{ margin-top:12px; color:var(--gray); font-size:.95rem; }
-  .deliver-note{ margin-top:24px; font-size:.9rem; color:var(--gray); text-align:center; }
-
-  /* ---------- Próximos passos ---------- */
-  .steps-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:40px; }
-  .step-item{ display:flex; gap:14px; }
-  .step-num{
-    flex:0 0 auto; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.12);
-    border:1px solid rgba(255,255,255,.4); display:flex; align-items:center; justify-content:center;
-    font-family:var(--serif); font-weight:700; font-size:.95rem; color:var(--white);
-  }
-  .step-item h4{ color:var(--white); font-size:1rem; font-family:var(--sans); font-weight:700; }
-  .step-item p{ margin-top:4px; font-size:.86rem; color:#CFE6EC; }
-  .cta-final{ text-align:center; padding-top:12px; border-top:1px solid rgba(255,255,255,.2); }
-  .cta-final p.micro{ margin-top:14px; font-size:.82rem; color:#B9D9E1; }
-
-  /* ---------- Footer ---------- */
-  footer{ background:var(--bg-2); border-top:1px solid var(--line); }
-  footer .wrap{ padding:26px clamp(20px,4vw,40px); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-  footer p{ font-size:.8rem; color:var(--gray); }
-
-  /* ---------- Responsive ---------- */
-  @media (max-width:980px){
-    .cards-4, .cards-4b{ grid-template-columns:repeat(2,1fr); }
-    .split{ grid-template-columns:1fr; }
-    .results-grid{ grid-template-columns:repeat(2,1fr); }
-    .kpi-grid{ grid-template-columns:repeat(2,1fr); }
-    .deliver-grid{ grid-template-columns:1fr; }
-    .steps-row{ grid-template-columns:1fr; }
-    .stat-strip{ grid-template-columns:1fr; gap:18px; }
-    .class-steps{ grid-template-columns:repeat(2,1fr); }
-  }
-  @media (max-width:640px){
-    .cards-4, .cards-4b, .results-grid, .kpi-grid, .class-steps{ grid-template-columns:1fr; }
-    .brand-text span{ display:none; }
-    .week{ grid-template-columns:34px 1fr; gap:12px; }
-    .week-node{ width:34px; height:34px; font-size:.86rem; }
-    .timeline::before{ left:16px; }
-    .week-btn{ padding:16px; }
-    .class-bar{ height:auto; flex-direction:column; }
-    .class-bar .seg{ padding:10px; justify-content:flex-start; }
-  }
-
-  /* ---------- Print ---------- */
-  @media print{
-    @page{ margin:16mm 14mm; }
-    html,body{ background:#fff; font-size:11.5pt; }
-    .topnav, .hero .cta-row, .btn, .chevron, .cta-final .btn{ display:none !important; }
-    a[href]{ text-decoration:none; color:inherit; }
-    section{ scroll-margin-top:0; }
-    .reveal{ opacity:1 !important; transform:none !important; }
-    .bg-dark{ background:none !important; color:var(--navy) !important; border-bottom:2px solid var(--navy); }
-    .bg-dark .eyebrow, .bg-dark h2, .bg-dark h3, .bg-dark p, .stat-strip .item .num, .stat-strip .item .cap, .stat-strip .foot{ color:var(--navy) !important; }
-    .hero{ padding-bottom:10px; }
-    .hero h1, .hero .lead{ color:var(--navy) !important; }
-    .badge{ border-color:var(--navy) !important; color:var(--navy) !important; }
-    .result-tile{ background:#fff !important; border:1px solid #ccc; }
-    .result-tile .big, .result-tile .desc, .result-tile .src{ color:var(--navy) !important; }
-    .results-grid{ border-color:#ccc; background:#ccc; }
-    .step-item h4, .step-item p, .step-num{ color:var(--navy) !important; border-color:#ccc; }
-    .step-num{ background:none; }
-    section > .wrap{ padding-top:18px; padding-bottom:18px; }
-    .info-card, .method-card, .kpi-card, .deliver-card, .card-plain, .week-card{ box-shadow:none !important; break-inside:avoid; }
-    .week-panel[hidden]{ display:block !important; }
-    .week-panel-inner{ opacity:1 !important; transform:none !important; }
-    h2, h3{ break-after:avoid; }
-    footer{ background:#fff; }
-  }
+@media(max-width:640px){
+  #tabs{order:3;width:100%;justify-content:space-between;}
+  .brand{order:1;}
+  .icon-btn{order:2;}
+}
 </style>
 </head>
 <body>
 
-<header class="topnav">
-  <div class="wrap">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true">DH</span>
-      <span class="brand-text">
-        <strong>DRG + Hospitalista</strong>
-        <span>Prévia executiva</span>
-      </span>
+<div id="topbar">
+  <div id="topbar-inner">
+    <div class="brand"><span class="ico">🃏</span> Flashcards IA</div>
+    <div id="tabs">
+      <button class="tab-btn active" data-tab="decks">📚 Decks</button>
+      <button class="tab-btn" data-tab="import">📥 Importar PDF</button>
+      <button class="tab-btn" data-tab="study">🧠 Estudar</button>
+      <button class="tab-btn" data-tab="stats">📊 Estatísticas</button>
     </div>
-    <nav class="navlinks" aria-label="Navegação principal">
-      <a href="#visao-geral">Visão geral</a>
-      <a href="#jornada">Jornada</a>
-      <a href="#metodologia">Metodologia</a>
-      <a href="#aula">Uma aula</a>
-      <a href="#painel">Painel</a>
-      <a href="#resultados">Resultados</a>
-      <a href="#entrega">Entrega final</a>
-      <a href="#proximos-passos">Próximos passos</a>
-    </nav>
+    <button class="icon-btn" id="theme-toggle" title="Alternar tema">🌙</button>
+    <button class="icon-btn" id="settings-btn" title="Configurações">⚙️</button>
   </div>
-</header>
+</div>
 
-<main>
+<div id="main">
 
-  <!-- 1. HERO -->
-  <section id="hero" class="hero bg-dark" aria-labelledby="hero-title">
-    <div class="wrap">
-      <div class="badges" role="list" aria-label="Formato do programa">
-        <span class="badge" role="listitem">Híbrido</span>
-        <span class="badge" role="listitem">8 semanas</span>
-        <span class="badge" role="listitem">Projeto aplicado no seu hospital</span>
-      </div>
-      <p class="eyebrow" style="color:#9FD3E3;">Prévia executiva — programa de formação</p>
-      <h1 id="hero-title">Excelência Hospitalar: Implementação do Modelo DRG + Medicina Hospitalista</h1>
-      <p class="lead">Um programa híbrido de 8 semanas que leva sua liderança clínica e assistencial da teoria à prática. Cada hospital participante sai com um roadmap de implantação e um painel de indicadores parametrizado, prontos para operar.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="#jornada">
-          Ver a jornada
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
-        <a class="btn btn-ghost" href="#proximos-passos">Próximos passos</a>
-      </div>
-
-      <div class="stat-strip">
-        <div class="item">
-          <div class="num">20%</div>
-          <div class="cap">menos tempo médio de permanência em hospitais que já adotam o modelo</div>
-        </div>
-        <div class="item">
-          <div class="num">10,9% → 8,8%</div>
-          <div class="cap">mortalidade hospitalar, mesmo com pacientes mais complexos (Chile, 2025)</div>
-        </div>
-        <div class="item">
-          <div class="num">78%</div>
-          <div class="cap">dos hospitais brasileiros projetam ampliar contratos por valor até 2030</div>
-        </div>
-        <p class="foot">Resultados documentados em hospitais que já adotam o modelo — fontes completas na seção Resultados esperados.</p>
-      </div>
+  <!-- ===== DECKS ===== -->
+  <div class="screen active" id="screen-decks">
+    <h2 class="screen-title">Seus Decks</h2>
+    <p class="screen-sub">Organize seus flashcards por assunto.</p>
+    <div style="display:flex;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+      <button class="btn" id="new-deck-btn">➕ Novo Deck</button>
     </div>
-  </section>
+    <div id="decks-grid"></div>
 
-  <!-- 2. O PROBLEMA E A OPORTUNIDADE -->
-  <section id="problema" class="bg-1" aria-labelledby="problema-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Por que agora</p>
-        <h2 id="problema-title">O custo hospitalar não para de crescer. A janela para agir está aberta.</h2>
-      </div>
-
-      <div class="split">
-        <div class="card-plain reveal">
-          <h3>O problema</h3>
-          <p>Por décadas, o hospital foi remunerado essencialmente pelo que gastava. Cada exame adicional, cada dia extra de internação, cada procedimento representava receita — um incentivo estrutural ao volume, não ao resultado.</p>
-          <p>Esse arranjo pressiona margens, prolonga a permanência e mantém o custo como consequência, não como algo ativamente gerido.</p>
-          <div class="quote-block">"Onde o custo deveria ser risco gerenciado, ele continua sendo apenas consequência."</div>
-        </div>
-
-        <div class="card-plain reveal">
-          <h3>A oportunidade</h3>
-          <div class="opp-chart">
-            <div class="opp-row">
-              <div class="opp-label"><span>Hospitais com contrato baseado em valor hoje</span></div>
-              <div class="opp-track"><div class="opp-fill now"><span>10%</span></div></div>
-            </div>
-            <div class="opp-row">
-              <div class="opp-label"><span>Projetam ampliar modelos por valor até 2030</span></div>
-              <div class="opp-track"><div class="opp-fill future"><span>78%</span></div></div>
-            </div>
-            <p class="opp-source">Fonte: IBRAVS / L.E.K. Consulting, 2025.</p>
-          </div>
-          <p style="margin-top:18px;">A distância entre esses dois números é a janela de oportunidade. Os hospitais que constroem agora a capacidade — documentação clínica, indicadores, gestão hospitalista — chegam à virada na frente.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3. VISÃO GERAL -->
-  <section id="visao-geral" aria-labelledby="visao-geral-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">O programa em números</p>
-        <h2 id="visao-geral-title">Visão geral</h2>
-      </div>
-
-      <div class="cards-4">
-        <div class="info-card reveal">
-          <p class="tag">Formato</p>
-          <h3>Híbrido (blended)</h3>
-          <p>Encontros ao vivo remotos, 2 imersões presenciais (abertura e encerramento) e um projeto aplicado no próprio hospital do participante.</p>
-        </div>
-        <div class="info-card reveal">
-          <p class="tag">Duração</p>
-          <h3>8 semanas</h3>
-          <p>8 encontros ao vivo semanais, estruturados em torno de um único fio condutor: o painel de indicadores.</p>
-        </div>
-        <div class="info-card reveal">
-          <p class="tag">Público-alvo</p>
-          <h3>Liderança clínica e de gestão</h3>
-          <ul>
-            <li>Diretores hospitalares e clínicos</li>
-            <li>Médicos hospitalistas e líderes de equipe</li>
-            <li>Gestores de qualidade, leitos e faturamento/CDI</li>
-          </ul>
-        </div>
-        <div class="info-card reveal">
-          <p class="tag">Carga horária</p>
-          <h3>~4h/semana</h3>
-          <p>8 encontros ao vivo (~2h/semana) + 2 imersões presenciais + ~2h/semana de aplicação prática no hospital.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4. A JORNADA -->
-  <section id="jornada" class="bg-1" aria-labelledby="jornada-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">A jornada</p>
-        <h2 id="jornada-title">8 semanas, do fundamento à sustentação</h2>
-        <p class="lead">Clique em cada semana para ver o objetivo e o entregável. As imersões presenciais abrem e fecham o programa.</p>
-      </div>
-
-      <div class="timeline">
-
-        <div class="week reveal">
-          <div class="week-node immersion" aria-hidden="true">1</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="true" aria-controls="panel-1" id="head-1">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 1</span>
-                  <span class="week-title">Fundamentos</span>
-                  <span class="immersion-chip">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-                    Imersão presencial · Abertura
-                  </span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-1" role="region" aria-labelledby="head-1">
-              <div class="week-panel-inner show">
-                <p><strong>Objetivo:</strong> o problema dos custos e a resposta (DRG + hospitalista) e por que os dois andam juntos.</p>
-                <p><strong>Entregável da semana:</strong> diagnóstico inicial — mapa de custos e incentivos do próprio hospital — e alinhamento da liderança em torno do modelo.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="week reveal">
-          <div class="week-node" aria-hidden="true">2</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="false" aria-controls="panel-2" id="head-2">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 2</span>
-                  <span class="week-title">O sistema DRG na prática</span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-2" role="region" aria-labelledby="head-2" hidden>
-              <div class="week-panel-inner">
-                <p><strong>Objetivo:</strong> da documentação ao pagamento; case-mix, comorbidades/complicações (CC/MCC) e agrupador (grouper).</p>
-                <p><strong>Entregável da semana:</strong> primeira leitura do Case Mix Index (CMI) atual do hospital e dos DRGs mais frequentes.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="week reveal">
-          <div class="week-node" aria-hidden="true">3</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="false" aria-controls="panel-3" id="head-3">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 3</span>
-                  <span class="week-title">O modelo hospitalista</span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-3" role="region" aria-labelledby="head-3" hidden>
-              <div class="week-panel-inner">
-                <p><strong>Objetivo:</strong> papel, competências (framework SHM) e a trilha de atuação do iniciante ao ápice.</p>
-                <p><strong>Entregável da semana:</strong> mapeamento da equipe hospitalista atual na trilha de maturidade — do iniciante ao ápice.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="week reveal">
-          <div class="week-node" aria-hidden="true">4</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="false" aria-controls="panel-4" id="head-4">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 4</span>
-                  <span class="week-title">Painel de indicadores</span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-4" role="region" aria-labelledby="head-4" hidden>
-              <div class="week-panel-inner">
-                <p><strong>Objetivo:</strong> os cinco eixos (fluxo, segurança/qualidade, transição, financeiro/DRG e interface com a emergência) e a leitura por Controle Estatístico de Processo (CEP).</p>
-                <p><strong>Entregável da semana:</strong> rascunho do painel de indicadores do hospital, com metas parametrizadas por eixo.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="week reveal">
-          <div class="week-node" aria-hidden="true">5</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="false" aria-controls="panel-5" id="head-5">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 5</span>
-                  <span class="week-title">Documentação clínica e CDI</span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-5" role="region" aria-labelledby="head-5" hidden>
-              <div class="week-panel-inner">
-                <p><strong>Objetivo:</strong> fazer a documentação refletir a realidade clínica e sustentar o DRG.</p>
-                <p><strong>Entregável da semana:</strong> plano de queries e auditoria-piloto de uma amostra de prontuários.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="week reveal">
-          <div class="week-node" aria-hidden="true">6</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="false" aria-controls="panel-6" id="head-6">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 6</span>
-                  <span class="week-title">Fluxo, permanência e emergência (Lean)</span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-6" role="region" aria-labelledby="head-6" hidden>
-              <div class="week-panel-inner">
-                <p><strong>Objetivo:</strong> boarding, ocupação, dias evitáveis, NEDOCS, tempo porta-médico.</p>
-                <p><strong>Entregável da semana:</strong> diagnóstico de fluxo do pronto-socorro à enfermaria, com gargalos priorizados.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="week reveal">
-          <div class="week-node" aria-hidden="true">7</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="false" aria-controls="panel-7" id="head-7">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 7</span>
-                  <span class="week-title">Roadmap de implantação</span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-7" role="region" aria-labelledby="head-7" hidden>
-              <div class="week-panel-inner">
-                <p><strong>Objetivo:</strong> as 8 fases do modelo; construção do plano do próprio hospital (projeto aplicado).</p>
-                <p><strong>Entregável da semana:</strong> roadmap de implantação do hospital, fase a fase, com responsáveis e prazos.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="week reveal">
-          <div class="week-node immersion" aria-hidden="true">8</div>
-          <div class="week-card">
-            <h3>
-              <button class="week-btn" aria-expanded="false" aria-controls="panel-8" id="head-8">
-                <span class="week-heading">
-                  <span class="week-eyebrow">Semana 8</span>
-                  <span class="week-title">Governança, sustentação e resultados</span>
-                  <span class="immersion-chip">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
-                    Imersão presencial · Encerramento
-                  </span>
-                </span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            </h3>
-            <div class="week-panel" id="panel-8" role="region" aria-labelledby="head-8" hidden>
-              <div class="week-panel-inner">
-                <p><strong>Objetivo:</strong> consolidar a governança do modelo, garantir sua sustentação no tempo e apresentar os resultados do projeto aplicado.</p>
-                <p><strong>Entregável da semana:</strong> roadmap de implantação e painel de indicadores entregues; apresentação dos projetos de cada hospital ao grupo.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- 5. METODOLOGIA -->
-  <section id="metodologia" aria-labelledby="metodologia-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Como se aprende</p>
-        <h2 id="metodologia-title">Metodologia</h2>
-      </div>
-
-      <div class="cards-4b">
-        <div class="method-card reveal">
-          <div class="method-num">01</div>
-          <h3>Aula ao vivo</h3>
-          <p>Encontros semanais de cerca de 2h, em formato executivo — direto ao ponto, sem gordura acadêmica.</p>
-        </div>
-        <div class="method-card reveal">
-          <div class="method-num">02</div>
-          <h3>Estudo de caso real</h3>
-          <p>Casos documentados no Brasil e na América Latina — Chile, Belo Horizonte, FHEMIG — discutidos em grupo.</p>
-        </div>
-        <div class="method-card reveal">
-          <div class="method-num">03</div>
-          <h3>Aplicação prática</h3>
-          <p>Cada participante conduz um miniprojeto no próprio hospital, semana a semana, com entregáveis reais.</p>
-        </div>
-        <div class="method-card reveal">
-          <div class="method-num">04</div>
-          <h3>Mentoria</h3>
-          <p>Apoio direto entre encontros para destravar decisões e ajustar o projeto ao contexto local.</p>
-        </div>
-      </div>
-
-      <div class="callout reveal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/></svg>
-        <p><strong>O painel de indicadores é o fio condutor.</strong> Toda semana volta a ele, acrescentando uma camada — dos cinco eixos à leitura por Controle Estatístico de Processo (CEP).</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- 6. COMO É UMA AULA -->
-  <section id="aula" class="bg-1" aria-labelledby="aula-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">O formato de um encontro</p>
-        <h2 id="aula-title">Como é uma aula</h2>
-        <p class="lead">Um roteiro-tipo de um encontro ao vivo de 2 horas.</p>
-      </div>
-
-      <div class="reveal">
-        <div class="class-bar" role="img" aria-label="Roteiro de 120 minutos: 20 minutos de teoria, 30 de estudo de caso, 40 de aplicação ao hospital e 30 de mentoria">
-          <div class="seg seg-1">20&#39; Teoria</div>
-          <div class="seg seg-2">30&#39; Caso</div>
-          <div class="seg seg-3">40&#39; Aplicação</div>
-          <div class="seg seg-4">30&#39; Mentoria</div>
-        </div>
-        <div class="class-legend"><span>Início do encontro</span><span>120 minutos</span><span>Fim do encontro</span></div>
-
-        <div class="class-steps">
-          <div class="class-step">
-            <span class="t"><span class="sw" style="background:#BFD9E1;"></span>20 min</span>
-            <h4>Teoria</h4>
-            <p>Conceito do dia, direto ao ponto — sem gordura acadêmica.</p>
-          </div>
-          <div class="class-step">
-            <span class="t"><span class="sw" style="background:#8FB8C6;"></span>30 min</span>
-            <h4>Estudo de caso</h4>
-            <p>Um caso real discutido em grupo, com dados e desfechos verificáveis.</p>
-          </div>
-          <div class="class-step">
-            <span class="t"><span class="sw" style="background:#1F6F8B;"></span>40 min</span>
-            <h4>Aplicação ao seu hospital</h4>
-            <p>O conceito aplicado ao contexto e aos dados do próprio hospital do participante.</p>
-          </div>
-          <div class="class-step">
-            <span class="t"><span class="sw" style="background:#14505F;"></span>30 min</span>
-            <h4>Mentoria e dúvidas</h4>
-            <p>Apoio direto para destravar o miniprojeto da semana.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 7. AMOSTRA DO PAINEL DE INDICADORES -->
-  <section id="painel" aria-labelledby="painel-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">O fio condutor</p>
-        <h2 id="painel-title">Amostra do painel de indicadores</h2>
-        <p class="lead">Um recorte do painel que cada hospital vai parametrizar nas semanas 4 e 5.</p>
-      </div>
-
-      <div class="kpi-note reveal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-        Valores ilustrativos, apenas para demonstrar o formato do painel — não são dados de um hospital real.
-      </div>
-
-      <div class="kpi-grid">
-        <div class="kpi-card reveal">
-          <span class="kpi-axis">Eixo 1 · Fluxo</span>
-          <span class="kpi-name">Tempo médio de permanência</span>
-          <span class="kpi-value">4,6 dias</span>
-          <span class="kpi-formula">Pacientes-dia ÷ altas no período</span>
-          <div class="kpi-track"><i style="width:58%;"></i></div>
-          <span class="kpi-meta">Meta: reduzir vs. basal</span>
-          <span class="kpi-status status-good">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            Em melhora
-          </span>
-        </div>
-
-        <div class="kpi-card reveal">
-          <span class="kpi-axis">Eixo 2 · Segurança</span>
-          <span class="kpi-name">Reinternação em 30 dias</span>
-          <span class="kpi-value">9,4%</span>
-          <span class="kpi-formula">Readmissões não planejadas ÷ altas</span>
-          <div class="kpi-track"><i style="width:47%;"></i></div>
-          <span class="kpi-meta">Meta: ≤ 10–12%</span>
-          <span class="kpi-status status-good">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            Dentro da meta
-          </span>
-        </div>
-
-        <div class="kpi-card reveal">
-          <span class="kpi-axis">Eixo 1 · Fluxo</span>
-          <span class="kpi-name">Taxa de ocupação</span>
-          <span class="kpi-value">87%</span>
-          <span class="kpi-formula">Leitos-dia ocupados ÷ disponíveis</span>
-          <div class="kpi-track"><i style="width:87%;"></i></div>
-          <span class="kpi-meta">Meta: ~85%</span>
-          <span class="kpi-status status-watch">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="4"/></svg>
-            Acompanhar
-          </span>
-        </div>
-
-        <div class="kpi-card reveal">
-          <span class="kpi-axis">Eixo 5 · Emergência</span>
-          <span class="kpi-name">NEDOCS</span>
-          <span class="kpi-value">62</span>
-          <span class="kpi-formula">Escore de superlotação do PS</span>
-          <div class="kpi-track"><i style="width:44%;"></i></div>
-          <span class="kpi-meta">Meta: fora da faixa severa</span>
-          <span class="kpi-status status-watch">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="4"/></svg>
-            Acompanhar
-          </span>
-        </div>
-
-        <div class="kpi-card reveal">
-          <span class="kpi-axis">Eixo 4 · Financeiro / DRG</span>
-          <span class="kpi-name">Case Mix Index (CMI)</span>
-          <span class="kpi-value">1,08</span>
-          <span class="kpi-formula">Peso médio dos DRGs das altas</span>
-          <div class="kpi-track"><i style="width:65%;"></i></div>
-          <span class="kpi-meta">Meta: refletir a complexidade real</span>
-          <span class="kpi-status status-good">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            Em melhora
-          </span>
-        </div>
-
-        <div class="kpi-card reveal">
-          <span class="kpi-axis">Eixo 2 · Segurança</span>
-          <span class="kpi-name">Mortalidade (razão O/E)</span>
-          <span class="kpi-value">0,91</span>
-          <span class="kpi-formula">Óbitos observados ÷ esperados</span>
-          <div class="kpi-track"><i style="width:45%;"></i></div>
-          <span class="kpi-meta">Meta: O/E &lt; 1,0</span>
-          <span class="kpi-status status-good">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            Dentro da meta
-          </span>
-        </div>
-      </div>
-
-      <p class="kpi-foot reveal">Painel completo: cinco eixos — fluxo, segurança/qualidade, transição do cuidado, financeiro/DRG e interface com a emergência — lidos por Controle Estatístico de Processo (CEP), distinguindo ruído do processo de sinal real.</p>
-    </div>
-  </section>
-
-  <!-- 8. RESULTADOS ESPERADOS -->
-  <section id="resultados" class="bg-dark" aria-labelledby="resultados-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Resultados esperados</p>
-        <h2 id="resultados-title">O que hospitais que adotam o modelo já registram</h2>
-      </div>
-
-      <div class="results-grid">
-        <div class="result-tile reveal">
-          <div class="big">~20%</div>
-          <p class="desc">de redução no tempo médio de permanência em hospitais que já adotam o modelo hospitalista.</p>
-          <p class="src">SOBRAMH / projeto FHEMIG, 2025</p>
-        </div>
-        <div class="result-tile reveal">
-          <div class="big">~50%</div>
-          <p class="desc">menos casos de longa permanência nesses mesmos hospitais.</p>
-          <p class="src">SOBRAMH / projeto FHEMIG, 2025</p>
-        </div>
-        <div class="result-tile reveal">
-          <div class="big">10,9%&nbsp;→&nbsp;8,8%</div>
-          <p class="desc">mortalidade hospitalar, mesmo com aumento da complexidade dos pacientes atendidos.</p>
-          <p class="src">Rev Med Chile, 2025</p>
-        </div>
-        <div class="result-tile reveal">
-          <div class="big">2,8%&nbsp;→&nbsp;2,2%</div>
-          <p class="desc">reingressos urgentes, no mesmo período e serviço.</p>
-          <p class="src">Rev Med Chile, 2025</p>
-        </div>
-        <div class="result-tile reveal">
-          <div class="big">+1.700</div>
-          <p class="desc">internações a mais por mês, sem novos recursos — DRG em 7 hospitais públicos.</p>
-          <p class="src">Caso Belo Horizonte</p>
-        </div>
-        <div class="result-tile reveal">
-          <div class="big">78%</div>
-          <p class="desc">dos hospitais brasileiros projetam ampliar modelos por valor até 2030 — hoje, apenas ~10% têm contratos assim.</p>
-          <p class="src">IBRAVS / L.E.K., 2025</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 9. O QUE CADA HOSPITAL LEVA -->
-  <section id="entrega" class="bg-1" aria-labelledby="entrega-title">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Entrega final</p>
-        <h2 id="entrega-title">O que cada hospital leva ao final</h2>
-      </div>
-
-      <div class="deliver-grid">
-        <div class="deliver-card reveal">
-          <div class="deliver-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8M21 7v6"/></svg>
-          </div>
-          <h3>Roadmap de implantação</h3>
-          <p>Um plano fase a fase — baseado nas oito fases do modelo DRG — com responsáveis, prazos e pré-requisitos, construído para a realidade do seu hospital.</p>
-        </div>
-        <div class="deliver-card reveal">
-          <div class="deliver-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/></svg>
-          </div>
-          <h3>Painel de indicadores parametrizado</h3>
-          <p>Os cinco eixos do painel, com metas e fórmulas calibradas à demanda e à capacidade do seu hospital — pronto para pilotar o dia a dia desde a semana seguinte ao encerramento.</p>
-        </div>
-      </div>
-      <p class="deliver-note reveal">Ambos são apresentados pelo próprio participante na imersão de encerramento — a diretoria sai com uma decisão informada sobre a implantação.</p>
-    </div>
-  </section>
-
-  <!-- 10. PRÓXIMOS PASSOS / CTA -->
-  <section id="proximos-passos" class="bg-dark" aria-labelledby="proximos-title">
-    <div class="wrap">
-      <div class="section-head reveal" style="max-width:none; text-align:center; margin-left:auto; margin-right:auto;">
-        <p class="eyebrow" style="justify-content:center;">Próximos passos</p>
-        <h2 id="proximos-title">Vamos agendar a turma piloto</h2>
-      </div>
-
-      <div class="steps-row reveal">
-        <div class="step-item">
-          <span class="step-num">1</span>
-          <div>
-            <h4>Alinhamento</h4>
-            <p>Reunião de 30 minutos com a diretoria para validar escopo e público.</p>
-          </div>
-        </div>
-        <div class="step-item">
-          <span class="step-num">2</span>
-          <div>
-            <h4>Turma piloto</h4>
-            <p>Definição de datas, hospital(is) piloto e formato das imersões.</p>
-          </div>
-        </div>
-        <div class="step-item">
-          <span class="step-num">3</span>
-          <div>
-            <h4>Abertura</h4>
-            <p>Kickoff com a imersão presencial da Semana 1.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="cta-final reveal">
-        <a class="btn btn-teal" href="#proximos-passos">Agendar a turma piloto</a>
-        <p class="micro">Fale com a equipe responsável pelo programa para confirmar datas e formato.</p>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<footer>
-  <div class="wrap">
-    <p>Excelência Hospitalar: Implementação do Modelo DRG + Medicina Hospitalista — prévia executiva de apresentação. Não substitui o programa completo do curso.</p>
-    <p id="gen-date"></p>
+    <div id="deck-detail-wrap" style="margin-top:28px"></div>
   </div>
-</footer>
+
+  <!-- ===== IMPORT ===== -->
+  <div class="screen" id="screen-import">
+    <h2 class="screen-title">Importar PDF</h2>
+    <p class="screen-sub">Extraia o texto de um PDF e gere flashcards automaticamente com IA.</p>
+
+    <div class="deck-ctx">
+      <label class="lbl" style="margin:0">Deck de destino</label>
+      <select class="inp" id="import-deck-select"></select>
+    </div>
+
+    <div class="card-box step">
+      <div class="step-title"><span class="num">1</span> Selecione o PDF (máx. 20MB)</div>
+      <div class="drop-zone" id="drop-zone">
+        <div class="ico">📄</div>
+        <div style="font-weight:700;font-size:13px">Arraste um PDF aqui ou clique para escolher</div>
+        <input type="file" id="pdf-input" accept="application/pdf" style="display:none">
+      </div>
+      <div id="pdf-info" style="margin-top:10px;font-size:12.5px;color:var(--muted)"></div>
+    </div>
+
+    <div class="card-box step hidden" id="page-range-box">
+      <div class="step-title"><span class="num">2</span> Escolha as páginas</div>
+      <div class="page-range">
+        <input type="number" class="inp" id="page-from" min="1" value="1"> até
+        <input type="number" class="inp" id="page-to" min="1" value="1">
+        <button class="btn secondary sm" id="extract-btn">Extrair texto</button>
+      </div>
+    </div>
+
+    <div class="card-box step hidden" id="preview-box">
+      <div class="step-title"><span class="num">3</span> Revise o texto extraído (você pode editar)</div>
+      <textarea class="inp" id="extracted-text" style="min-height:200px;font-size:12.5px"></textarea>
+      <div style="margin-top:6px;font-size:11.5px;color:var(--muted)" id="char-count"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn" id="generate-btn">✨ Gerar Flashcards com IA</button>
+        <span id="generate-status" style="font-size:12.5px;color:var(--muted)"></span>
+      </div>
+    </div>
+
+    <div class="card-box step hidden" id="review-box">
+      <div class="step-title"><span class="num">4</span> Revise, edite ou remova os cards gerados</div>
+      <div class="review-list" id="review-list"></div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <button class="btn" id="save-generated-btn">💾 Salvar cards selecionados no deck</button>
+        <button class="btn secondary" id="discard-generated-btn">Descartar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STUDY ===== -->
+  <div class="screen" id="screen-study">
+    <h2 class="screen-title">Sessão de Estudo</h2>
+    <p class="screen-sub">Vire o card, avalie seu conhecimento e continue.</p>
+
+    <div class="deck-ctx">
+      <label class="lbl" style="margin:0">Deck</label>
+      <select class="inp" id="study-deck-select"></select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:700">
+        <input type="checkbox" id="study-all-toggle"> estudar todos (ignorar data de revisão)
+      </label>
+      <button class="btn secondary sm" id="start-study-btn">▶️ Iniciar sessão</button>
+    </div>
+
+    <div id="study-area"></div>
+  </div>
+
+  <!-- ===== STATS ===== -->
+  <div class="screen" id="screen-stats">
+    <h2 class="screen-title">Estatísticas</h2>
+    <p class="screen-sub">Acompanhe seu progresso.</p>
+    <div class="deck-ctx">
+      <label class="lbl" style="margin:0">Deck</label>
+      <select class="inp" id="stats-deck-select"></select>
+    </div>
+    <div id="stats-content"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
 
 <script>
-(function(){
-  "use strict";
+/* ======================= ESTADO / PERSISTÊNCIA ======================= */
+const STORAGE_KEY='flashcardsAppData';
+let data=loadData();
+let currentDeckDetailId=null;
+let studyQueue=[];
+let studyIdx=0;
+let studySession={total:0,correct:0,startedAt:0};
+let studyFlipped=false;
+let editingCardId=null;
+let generatedReview=[];
 
-  // Data de geração no rodapé — útil para o PDF exportado da reunião.
-  var genEl = document.getElementById('gen-date');
-  if (genEl){
-    try{
-      genEl.textContent = 'Gerado em ' + new Date().toLocaleDateString('pt-BR');
-    }catch(e){}
-  }
+function loadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw)return JSON.parse(raw);
+  }catch(e){}
+  return {decks:{},cards:{},settings:{apiKey:'',model:'gemini-2.0-flash',theme:'light'}};
+}
+function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function toast(msg,color){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=color||'var(--text)';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2600);
+}
 
-  // Acordeão da jornada — padrão "disclosure": conteúdo fica genuinamente
-  // oculto (hidden) quando fechado, com uma transição leve de entrada.
-  var buttons = document.querySelectorAll('.week-btn');
-  buttons.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var panel = document.getElementById(btn.getAttribute('aria-controls'));
-      var inner = panel.querySelector('.week-panel-inner');
-      var expanded = btn.getAttribute('aria-expanded') === 'true';
+/* ======================= TEMA ======================= */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',data.settings.theme);
+  document.getElementById('theme-toggle').textContent=data.settings.theme==='dark'?'☀️':'🌙';
+}
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  data.settings.theme=data.settings.theme==='dark'?'light':'dark';
+  saveData();applyTheme();
+});
 
-      if (expanded){
-        btn.setAttribute('aria-expanded', 'false');
-        if (reduceMotion){
-          panel.hidden = true;
-          inner.classList.remove('show');
-        } else {
-          inner.classList.remove('show');
-          window.setTimeout(function(){ panel.hidden = true; }, 260);
-        }
-      } else {
-        btn.setAttribute('aria-expanded', 'true');
-        panel.hidden = false;
-        if (reduceMotion){
-          inner.classList.add('show');
-        } else {
-          // dupla rAF força o navegador a computar o estado inicial antes da transição
-          requestAnimationFrame(function(){
-            requestAnimationFrame(function(){ inner.classList.add('show'); });
-          });
-        }
-      }
-    });
+/* ======================= TABS ======================= */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>showTab(btn.dataset.tab));
+});
+function showTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));
+  if(name==='decks')renderDecks();
+  if(name==='import')renderImportScreen();
+  if(name==='study')renderStudySetup();
+  if(name==='stats')renderStats();
+}
+
+/* ======================= DECKS ======================= */
+function deckList(){return Object.values(data.decks).sort((a,b)=>a.name.localeCompare(b.name));}
+function cardsOfDeck(deckId){return Object.values(data.cards).filter(c=>c.deckId===deckId);}
+function dueCards(deckId){const now=Date.now();return cardsOfDeck(deckId).filter(c=>!c.proximaRevisao||c.proximaRevisao<=now);}
+
+document.getElementById('new-deck-btn').addEventListener('click',()=>{
+  openPromptModal('Novo Deck',[
+    {key:'name',label:'Nome do deck',placeholder:'Ex: Anatomia'},
+    {key:'description',label:'Descrição (opcional)',placeholder:'Ex: Sistema cardiovascular'}
+  ],(vals)=>{
+    if(!vals.name||!vals.name.trim()){toast('Dê um nome ao deck','var(--red)');return;}
+    const id='deck_'+genId();
+    data.decks[id]={id,name:vals.name.trim(),description:(vals.description||'').trim(),createdAt:Date.now()};
+    saveData();renderDecks();toast('Deck criado!','var(--green)');
   });
+});
 
-  // Realce discreto ao rolar a página.
-  // Checagem geométrica no scroll/resize (em vez de IntersectionObserver) para não
-  // depender do elemento cruzar o viewport quadro a quadro: um salto grande e instantâneo
-  // (arrastar a barra de rolagem direto para o fim, por exemplo) não teria gerado frames
-  // intermediários para um observer disparar, deixando o conteúdo pulado preso em opacity:0.
-  var revealTargets = document.querySelectorAll('.reveal');
-  if (reduceMotion){
-    revealTargets.forEach(function(t){ t.classList.add('is-visible'); });
-  } else {
-    var sweepReveals = function(){
-      var vh = window.innerHeight;
-      document.querySelectorAll('.reveal:not(.is-visible)').forEach(function(el){
-        var r = el.getBoundingClientRect();
-        if (r.top < vh && r.bottom > 0){ el.classList.add('is-visible'); }
-      });
-    };
-    var sweepQueued = false;
-    var queueSweep = function(){
-      if (sweepQueued) return;
-      sweepQueued = true;
-      requestAnimationFrame(function(){ sweepQueued = false; sweepReveals(); });
-    };
-    window.addEventListener('scroll', queueSweep, { passive:true });
-    window.addEventListener('resize', queueSweep);
-    sweepReveals();
+function renderDecks(){
+  const grid=document.getElementById('decks-grid');
+  const decks=deckList();
+  if(!decks.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ico">📚</div><p>Nenhum deck ainda. Crie o primeiro para começar!</p></div>`;
+  }else{
+    grid.innerHTML=decks.map(d=>{
+      const cards=cardsOfDeck(d.id);
+      const due=dueCards(d.id).length;
+      return `<div class="deck-card">
+        <h3>${esc(d.name)}</h3>
+        <p>${esc(d.description||'Sem descrição')}</p>
+        <div class="deck-stats">
+          <div class="stat"><b>${cards.length}</b> cards</div>
+          <div class="stat"><b>${due}</b> p/ revisar</div>
+        </div>
+        <div class="deck-actions">
+          <button class="btn secondary sm" onclick="openDeckDetail('${d.id}')">🗂️ Ver cards</button>
+          <button class="btn secondary sm" onclick="goStudyDeck('${d.id}')">🧠 Estudar</button>
+          <button class="btn secondary sm" onclick="exportDeck('${d.id}')">⬇️ Exportar</button>
+          <button class="btn danger sm" onclick="deleteDeck('${d.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
   }
+  populateDeckSelects();
+  if(currentDeckDetailId && data.decks[currentDeckDetailId])renderDeckDetail(currentDeckDetailId);
+}
 
-  // Destaque do item ativo no menu, conforme a seção visível.
-  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.navlinks a'));
-  var sections = navLinks
-    .map(function(a){ return document.querySelector(a.getAttribute('href')); })
-    .filter(Boolean);
+function deleteDeck(id){
+  const d=data.decks[id];if(!d)return;
+  if(!confirm(`Excluir o deck "${d.name}" e todos os seus ${cardsOfDeck(id).length} cards? Essa ação não pode ser desfeita.`))return;
+  Object.values(data.cards).filter(c=>c.deckId===id).forEach(c=>delete data.cards[c.id]);
+  delete data.decks[id];
+  if(currentDeckDetailId===id){currentDeckDetailId=null;document.getElementById('deck-detail-wrap').innerHTML='';}
+  saveData();renderDecks();toast('Deck excluído','var(--red)');
+}
 
-  if ('IntersectionObserver' in window && sections.length){
-    var navIo = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        var link = navLinks.filter(function(a){ return a.getAttribute('href') === '#' + entry.target.id; })[0];
-        if (!link) return;
-        if (entry.isIntersecting){
-          navLinks.forEach(function(a){ a.classList.remove('active'); });
-          link.classList.add('active');
-        }
-      });
-    }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
-    sections.forEach(function(s){ navIo.observe(s); });
+function exportDeck(id){
+  const d=data.decks[id];if(!d)return;
+  const cards=cardsOfDeck(id);
+  const payload={deck:d,cards};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${d.name.replace(/[^a-z0-9]+/gi,'_')}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(url);
+  toast('Deck exportado como JSON','var(--green)');
+}
+
+function populateDeckSelects(){
+  const decks=deckList();
+  const opts=decks.length?decks.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join(''):`<option value="">Nenhum deck</option>`;
+  ['import-deck-select','study-deck-select','stats-deck-select'].forEach(selId=>{
+    const el=document.getElementById(selId);
+    const prev=el.value;
+    el.innerHTML=opts;
+    if(decks.some(d=>d.id===prev))el.value=prev;
+  });
+}
+
+function goStudyDeck(deckId){
+  showTab('study');
+  document.getElementById('study-deck-select').value=deckId;
+  startStudySession();
+}
+
+/* ======================= DECK DETAIL (cards browser) ======================= */
+function openDeckDetail(deckId){
+  currentDeckDetailId=deckId;
+  renderDeckDetail(deckId);
+  document.getElementById('deck-detail-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderDeckDetail(deckId){
+  const d=data.decks[deckId];
+  const wrap=document.getElementById('deck-detail-wrap');
+  if(!d){wrap.innerHTML='';return;}
+  const q=(wrap.querySelector('#browse-q')?.value)||'';
+  const diffFilter=(wrap.querySelector('#browse-diff')?.value)||'';
+  wrap.innerHTML=`
+    <div class="card-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <h3 style="font-size:15px;font-weight:900">🗂️ Cards de "${esc(d.name)}"</h3>
+        <button class="btn sm" onclick="openCardEditor(null,'${deckId}')">➕ Novo card</button>
+      </div>
+      <div class="filter-row">
+        <input class="inp" id="browse-q" placeholder="🔎 Buscar por pergunta, resposta ou tag..." value="${esc(q)}">
+        <select class="inp" id="browse-diff">
+          <option value="">Todas dificuldades</option>
+          <option value="fácil">Fácil</option>
+          <option value="médio">Médio</option>
+          <option value="difícil">Difícil</option>
+        </select>
+      </div>
+      <div class="cards-grid" id="browse-grid"></div>
+    </div>`;
+  wrap.querySelector('#browse-diff').value=diffFilter;
+  wrap.querySelector('#browse-q').addEventListener('input',()=>renderDeckDetail(deckId));
+  wrap.querySelector('#browse-diff').addEventListener('change',()=>renderDeckDetail(deckId));
+
+  let cards=cardsOfDeck(deckId);
+  if(q)cards=cards.filter(c=>(c.pergunta+c.resposta+(c.tags||'')).toLowerCase().includes(q.toLowerCase()));
+  if(diffFilter)cards=cards.filter(c=>c.dificuldade===diffFilter);
+
+  const grid=wrap.querySelector('#browse-grid');
+  if(!cards.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ico">🃏</div><p>Nenhum card encontrado.</p></div>`;
+  }else{
+    grid.innerHTML=cards.map(c=>`
+      <div class="mini-card">
+        <div class="q">${esc(c.pergunta)}</div>
+        <div class="a">${esc(c.resposta)}</div>
+        <div class="badges">
+          ${c.categoria?`<span class="badge blue">${esc(c.categoria)}</span>`:''}
+          <span class="badge ${diffColor(c.dificuldade)}">${c.dificuldade||'médio'}</span>
+          ${c.favorito?'<span class="badge orange">⭐ favorito</span>':''}
+        </div>
+        <div class="row">
+          <button class="btn secondary sm" onclick="openCardEditor('${c.id}')">✏️</button>
+          <button class="btn danger sm" onclick="deleteCardConfirm('${c.id}')">🗑️</button>
+        </div>
+      </div>`).join('');
   }
-})();
+}
+function diffColor(d){return d==='fácil'?'green':d==='difícil'?'red':'orange';}
+
+function deleteCardConfirm(id){
+  if(!confirm('Excluir este flashcard?'))return;
+  const c=data.cards[id];const deckId=c?.deckId;
+  delete data.cards[id];
+  saveData();
+  renderDecks();
+  if(deckId)renderDeckDetail(deckId);
+  if(document.getElementById('screen-study').classList.contains('active'))renderStudyCard();
+  toast('Card excluído','var(--red)');
+}
+
+/* ======================= EDITOR DE CARD (modal) ======================= */
+function openCardEditor(cardId,deckIdForNew){
+  editingCardId=cardId;
+  const c=cardId?data.cards[cardId]:null;
+  const deckId=c?c.deckId:deckIdForNew;
+  const bg=document.createElement('div');
+  bg.className='modal-bg';bg.id='card-editor-bg';
+  bg.innerHTML=`
+    <div class="modal">
+      <h3>${c?'✏️ Editar Flashcard':'➕ Novo Flashcard'}</h3>
+      <div class="field"><label class="lbl">Pergunta</label><textarea class="inp" id="ed-pergunta">${esc(c?.pergunta||'')}</textarea></div>
+      <div class="field"><label class="lbl">Resposta</label><textarea class="inp" id="ed-resposta">${esc(c?.resposta||'')}</textarea></div>
+      <div class="field"><label class="lbl">Categoria (opcional)</label><input class="inp" id="ed-categoria" value="${esc(c?.categoria||'')}"></div>
+      <div class="field"><label class="lbl">Tags (separadas por vírgula)</label><input class="inp" id="ed-tags" value="${esc(c?.tags||'')}"></div>
+      <div class="field"><label class="lbl">Dificuldade</label>
+        <div class="diff-row">
+          <button type="button" class="diff-btn" data-d="fácil">Fácil</button>
+          <button type="button" class="diff-btn" data-d="médio">Médio</button>
+          <button type="button" class="diff-btn" data-d="difícil">Difícil</button>
+        </div>
+      </div>
+      <div class="field"><label class="lbl">Anotação pessoal (opcional)</label><textarea class="inp" id="ed-anotacoes">${esc(c?.anotacoes||'')}</textarea></div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700">
+          <input type="checkbox" id="ed-favorito" ${c?.favorito?'checked':''}> ⭐ Marcar como favorito
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="ed-cancel">Cancelar</button>
+        <button class="btn" id="ed-save">💾 Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
+  let diffVal=c?.dificuldade||'médio';
+  const setDiff=(v)=>{diffVal=v;bg.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('active',b.dataset.d===v));};
+  setDiff(diffVal);
+  bg.querySelectorAll('.diff-btn').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.d)));
+  bg.querySelector('#ed-cancel').addEventListener('click',()=>bg.remove());
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove();});
+  bg.querySelector('#ed-save').addEventListener('click',()=>{
+    const pergunta=bg.querySelector('#ed-pergunta').value.trim();
+    const resposta=bg.querySelector('#ed-resposta').value.trim();
+    if(!pergunta||!resposta){toast('Preencha pergunta e resposta','var(--red)');return;}
+    const fields={
+      pergunta,resposta,
+      categoria:bg.querySelector('#ed-categoria').value.trim(),
+      tags:bg.querySelector('#ed-tags').value.trim(),
+      dificuldade:diffVal,
+      anotacoes:bg.querySelector('#ed-anotacoes').value.trim(),
+      favorito:bg.querySelector('#ed-favorito').checked
+    };
+    if(c){
+      Object.assign(c,fields);
+      toast('Card atualizado!','var(--green)');
+    }else{
+      const id='card_'+genId();
+      data.cards[id]={id,deckId,...fields,criacao:Date.now(),ultimaRevisao:null,proximaRevisao:Date.now(),repetitions:0,ease:2.5,interval:0,acertos:0,erros:0};
+      toast('Card criado!','var(--accent)');
+    }
+    saveData();
+    bg.remove();
+    renderDecks();
+    if(deckId)renderDeckDetail(deckId);
+    if(document.getElementById('screen-study').classList.contains('active'))renderStudyCard();
+  });
+}
+
+/* ======================= MODAL GENÉRICO (prompt) ======================= */
+function openPromptModal(title,fields,onSave){
+  const bg=document.createElement('div');bg.className='modal-bg';
+  bg.innerHTML=`<div class="modal"><h3>${esc(title)}</h3>
+    ${fields.map(f=>`<div class="field"><label class="lbl">${esc(f.label)}</label><input class="inp" data-key="${f.key}" placeholder="${esc(f.placeholder||'')}"></div>`).join('')}
+    <div class="modal-actions"><button class="btn secondary" id="pm-cancel">Cancelar</button><button class="btn" id="pm-save">Salvar</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('#pm-cancel').addEventListener('click',()=>bg.remove());
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove();});
+  bg.querySelector('#pm-save').addEventListener('click',()=>{
+    const vals={};
+    bg.querySelectorAll('[data-key]').forEach(inp=>vals[inp.dataset.key]=inp.value);
+    onSave(vals);
+    bg.remove();
+  });
+}
+
+/* ======================= CONFIGURAÇÕES ======================= */
+document.getElementById('settings-btn').addEventListener('click',()=>{
+  const bg=document.createElement('div');bg.className='modal-bg';
+  bg.innerHTML=`<div class="modal">
+    <h3>⚙️ Configurações</h3>
+    <div class="field">
+      <label class="lbl">Chave da API Gemini</label>
+      <input class="inp" id="cfg-apikey" value="${esc(data.settings.apiKey)}" placeholder="Cole sua chave (aistudio.google.com)">
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">Fica salva apenas neste navegador. Consiga uma chave grátis em <b>aistudio.google.com/apikey</b>.</div>
+    </div>
+    <div class="field">
+      <label class="lbl">Modelo Gemini</label>
+      <input class="inp" id="cfg-model" value="${esc(data.settings.model)}">
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cfg-cancel">Cancelar</button>
+      <button class="btn" id="cfg-save">💾 Salvar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('#cfg-cancel').addEventListener('click',()=>bg.remove());
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove();});
+  bg.querySelector('#cfg-save').addEventListener('click',()=>{
+    data.settings.apiKey=bg.querySelector('#cfg-apikey').value.trim();
+    data.settings.model=bg.querySelector('#cfg-model').value.trim()||'gemini-2.0-flash';
+    saveData();bg.remove();toast('Configurações salvas','var(--green)');
+  });
+});
+
+/* ======================= IMPORTAR PDF ======================= */
+let pdfDoc=null;
+const dropZone=document.getElementById('drop-zone');
+const pdfInput=document.getElementById('pdf-input');
+dropZone.addEventListener('click',()=>pdfInput.click());
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop',e=>{
+  e.preventDefault();dropZone.classList.remove('drag');
+  if(e.dataTransfer.files[0])handlePdfFile(e.dataTransfer.files[0]);
+});
+pdfInput.addEventListener('change',()=>{if(pdfInput.files[0])handlePdfFile(pdfInput.files[0]);});
+
+function renderImportScreen(){
+  populateDeckSelects();
+  ['page-range-box','preview-box','review-box'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('pdf-info').textContent='';
+}
+
+async function handlePdfFile(file){
+  if(file.type!=='application/pdf'){toast('Selecione um arquivo PDF','var(--red)');return;}
+  if(file.size>20*1024*1024){toast('O PDF deve ter no máximo 20MB','var(--red)');return;}
+  document.getElementById('pdf-info').textContent=`Carregando "${file.name}" (${(file.size/1024/1024).toFixed(2)}MB)...`;
+  try{
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const buf=await file.arrayBuffer();
+    pdfDoc=await pdfjsLib.getDocument({data:buf}).promise;
+    document.getElementById('pdf-info').textContent=`"${file.name}" carregado — ${pdfDoc.numPages} página(s).`;
+    document.getElementById('page-from').value=1;
+    document.getElementById('page-from').max=pdfDoc.numPages;
+    document.getElementById('page-to').value=pdfDoc.numPages;
+    document.getElementById('page-to').max=pdfDoc.numPages;
+    document.getElementById('page-range-box').classList.remove('hidden');
+    document.getElementById('preview-box').classList.add('hidden');
+    document.getElementById('review-box').classList.add('hidden');
+  }catch(e){
+    toast('Erro ao ler o PDF: '+e.message,'var(--red)');
+  }
+}
+
+document.getElementById('extract-btn').addEventListener('click',async()=>{
+  if(!pdfDoc){toast('Carregue um PDF primeiro','var(--red)');return;}
+  let from=parseInt(document.getElementById('page-from').value)||1;
+  let to=parseInt(document.getElementById('page-to').value)||pdfDoc.numPages;
+  from=Math.max(1,Math.min(from,pdfDoc.numPages));
+  to=Math.max(from,Math.min(to,pdfDoc.numPages));
+  const btn=document.getElementById('extract-btn');
+  btn.disabled=true;btn.textContent='Extraindo...';
+  let fullText='';
+  try{
+    for(let p=from;p<=to;p++){
+      const page=await pdfDoc.getPage(p);
+      const content=await page.getTextContent();
+      fullText+=content.items.map(it=>it.str).join(' ')+'\n\n';
+    }
+  }catch(e){
+    toast('Erro ao extrair texto: '+e.message,'var(--red)');
+  }
+  btn.disabled=false;btn.textContent='Extrair texto';
+  fullText=fullText.trim();
+  if(!fullText){
+    toast('Nenhum texto encontrado — o PDF pode ser escaneado (imagem), sem suporte a OCR nesta versão.','var(--orange)');
+    return;
+  }
+  document.getElementById('extracted-text').value=fullText;
+  updateCharCount();
+  document.getElementById('preview-box').classList.remove('hidden');
+  document.getElementById('review-box').classList.add('hidden');
+});
+
+document.getElementById('extracted-text').addEventListener('input',updateCharCount);
+function updateCharCount(){
+  const len=document.getElementById('extracted-text').value.length;
+  document.getElementById('char-count').textContent=`${len.toLocaleString('pt-BR')} caracteres`;
+}
+
+document.getElementById('generate-btn').addEventListener('click',async()=>{
+  const texto=document.getElementById('extracted-text').value.trim();
+  if(!texto){toast('Nada para enviar à IA','var(--red)');return;}
+  if(!data.settings.apiKey){
+    toast('Configure sua chave da API Gemini primeiro (⚙️)','var(--red)');
+    return;
+  }
+  const btn=document.getElementById('generate-btn');
+  const statusEl=document.getElementById('generate-status');
+  btn.disabled=true;
+  statusEl.textContent='🤖 Gerando flashcards com IA...';
+  try{
+    const cards=await callGeminiForFlashcards(texto);
+    if(!cards.length)throw new Error('A IA não retornou nenhum flashcard. Tente outro trecho de texto.');
+    generatedReview=cards.map(c=>({id:genId(),pergunta:c.pergunta||'',resposta:c.resposta||'',categoria:c.categoria||'',keep:true}));
+    renderReviewList();
+    document.getElementById('review-box').classList.remove('hidden');
+    document.getElementById('review-box').scrollIntoView({behavior:'smooth'});
+    statusEl.textContent=`✅ ${cards.length} flashcards gerados. Revise abaixo antes de salvar.`;
+  }catch(e){
+    statusEl.textContent='';
+    toast('Erro ao gerar flashcards: '+e.message,'var(--red)');
+  }
+  btn.disabled=false;
+});
+
+async function callGeminiForFlashcards(texto){
+  const MAX_CHARS=60000;
+  const truncated=texto.length>MAX_CHARS?texto.slice(0,MAX_CHARS):texto;
+  const prompt=`Você é um especialista em criar flashcards de alta qualidade para estudo.
+Analise o texto abaixo e gere flashcards no formato pergunta → resposta.
+
+Regras:
+1. Crie entre 5 e 15 flashcards com base no conteúdo.
+2. Perguntas devem ser claras, objetivas e focadas nos pontos principais.
+3. Respostas devem ser concisas mas completas.
+4. Identifique conceitos-chave, definições, datas, processos e relações importantes.
+5. Priorize informações que realmente merecem ser memorizadas.
+6. Se houver dados numéricos, inclua-os com precisão.
+7. Use linguagem simples e direta.
+8. Defina uma "categoria" curta para cada card (ex: "Conceitos Básicos", "Datas", "Processos").
+
+Texto para análise:
+"""
+${truncated}
+"""`;
+
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(data.settings.model)}:generateContent?key=${encodeURIComponent(data.settings.apiKey)}`;
+  const body={
+    contents:[{parts:[{text:prompt}]}],
+    generationConfig:{
+      temperature:0.3,
+      maxOutputTokens:2048,
+      responseMimeType:'application/json',
+      responseSchema:{
+        type:'OBJECT',
+        properties:{
+          flashcards:{
+            type:'ARRAY',
+            items:{
+              type:'OBJECT',
+              properties:{
+                pergunta:{type:'STRING'},
+                resposta:{type:'STRING'},
+                categoria:{type:'STRING'}
+              },
+              required:['pergunta','resposta']
+            }
+          }
+        },
+        required:['flashcards']
+      }
+    }
+  };
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const json=await res.json();
+  if(!res.ok){
+    throw new Error(json?.error?.message||`Erro HTTP ${res.status}`);
+  }
+  const text=json?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text)throw new Error('Resposta vazia da IA (verifique sua chave ou cota).');
+  let parsed;
+  try{
+    parsed=JSON.parse(text);
+  }catch(e){
+    const match=text.match(/\{[\s\S]*\}/);
+    if(match)parsed=JSON.parse(match[0]);
+    else throw new Error('Não foi possível interpretar a resposta da IA.');
+  }
+  return Array.isArray(parsed.flashcards)?parsed.flashcards:[];
+}
+
+function renderReviewList(){
+  const wrap=document.getElementById('review-list');
+  wrap.innerHTML=generatedReview.map(c=>`
+    <div class="review-item" data-id="${c.id}">
+      <input type="checkbox" ${c.keep?'checked':''} onchange="toggleReviewKeep('${c.id}',this.checked)" style="margin-top:8px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <textarea class="inp" placeholder="Pergunta" oninput="updateReviewField('${c.id}','pergunta',this.value)">${esc(c.pergunta)}</textarea>
+        <textarea class="inp" placeholder="Resposta" oninput="updateReviewField('${c.id}','resposta',this.value)">${esc(c.resposta)}</textarea>
+        <input class="inp" placeholder="Categoria" value="${esc(c.categoria)}" oninput="updateReviewField('${c.id}','categoria',this.value)">
+      </div>
+      <button class="btn danger sm rm" onclick="removeReviewItem('${c.id}')">🗑️</button>
+    </div>`).join('');
+}
+function toggleReviewKeep(id,val){const it=generatedReview.find(c=>c.id===id);if(it)it.keep=val;}
+function updateReviewField(id,field,val){const it=generatedReview.find(c=>c.id===id);if(it)it[field]=val;}
+function removeReviewItem(id){generatedReview=generatedReview.filter(c=>c.id!==id);renderReviewList();}
+
+document.getElementById('discard-generated-btn').addEventListener('click',()=>{
+  generatedReview=[];
+  document.getElementById('review-box').classList.add('hidden');
+});
+
+document.getElementById('save-generated-btn').addEventListener('click',()=>{
+  const deckId=document.getElementById('import-deck-select').value;
+  if(!deckId){toast('Crie ou selecione um deck primeiro','var(--red)');return;}
+  const toSave=generatedReview.filter(c=>c.keep&&c.pergunta.trim()&&c.resposta.trim());
+  if(!toSave.length){toast('Nenhum card selecionado','var(--red)');return;}
+  toSave.forEach(c=>{
+    const id='card_'+genId();
+    data.cards[id]={id,deckId,pergunta:c.pergunta.trim(),resposta:c.resposta.trim(),categoria:c.categoria.trim(),
+      tags:'',dificuldade:'médio',anotacoes:'',favorito:false,
+      criacao:Date.now(),ultimaRevisao:null,proximaRevisao:Date.now(),repetitions:0,ease:2.5,interval:0,acertos:0,erros:0};
+  });
+  saveData();
+  toast(`🃏 ${toSave.length} flashcards salvos no deck!`,'var(--green)');
+  generatedReview=[];
+  document.getElementById('review-box').classList.add('hidden');
+  document.getElementById('preview-box').classList.add('hidden');
+  document.getElementById('page-range-box').classList.add('hidden');
+  document.getElementById('pdf-info').textContent='';
+  pdfDoc=null;
+  renderDecks();
+});
+
+/* ======================= ESTUDO (SM-2) ======================= */
+function renderStudySetup(){
+  populateDeckSelects();
+  document.getElementById('study-area').innerHTML=`<div class="empty"><div class="ico">🧠</div><p>Escolha um deck e clique em "Iniciar sessão" para começar a estudar.</p></div>`;
+}
+
+document.getElementById('start-study-btn').addEventListener('click',startStudySession);
+
+function startStudySession(){
+  const deckId=document.getElementById('study-deck-select').value;
+  if(!deckId){toast('Crie um deck primeiro','var(--red)');return;}
+  const all=cardsOfDeck(deckId);
+  const studyAll=document.getElementById('study-all-toggle').checked;
+  studyQueue=(studyAll?all:dueCards(deckId)).slice();
+  shuffleArray(studyQueue);
+  studyIdx=0;
+  studyFlipped=false;
+  studySession={total:0,correct:0,startedAt:Date.now()};
+  if(!studyQueue.length){
+    document.getElementById('study-area').innerHTML=`<div class="study-done"><div class="ico">🎉</div><h3>Tudo em dia!</h3><p style="color:var(--muted);margin-top:8px">Não há cards para revisar agora neste deck. Marque "estudar todos" para praticar mesmo assim.</p></div>`;
+    return;
+  }
+  renderStudyCard();
+}
+
+function shuffleArray(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
+function renderStudyCard(){
+  const area=document.getElementById('study-area');
+  if(studyIdx>=studyQueue.length){
+    const pct=studySession.total?Math.round(100*studySession.correct/studySession.total):0;
+    const secs=Math.round((Date.now()-studySession.startedAt)/1000);
+    area.innerHTML=`<div class="study-done">
+      <div class="ico">🎉</div><h3>Sessão concluída!</h3>
+      <p style="color:var(--muted);margin-top:8px">${studySession.total} cards revisados · ${pct}% de acerto · ${secs}s</p>
+      <button class="btn" style="margin-top:16px" onclick="startStudySession()">🔁 Estudar novamente</button>
+    </div>`;
+    return;
+  }
+  const c=studyQueue[studyIdx];
+  if(!data.cards[c.id]){studyIdx++;renderStudyCard();return;}
+  const card=data.cards[c.id];
+  studyFlipped=false;
+  area.innerHTML=`
+    <div class="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.round(100*studyIdx/studyQueue.length)}%"></div></div>
+      <div class="progress-txt">${studyIdx+1} / ${studyQueue.length}</div>
+    </div>
+    <div class="flashcard" id="flip-card">
+      <span class="side-lbl">Pergunta</span>
+      <div class="content" id="flash-content">${esc(card.pergunta)}</div>
+      <span class="hint">Clique ou pressione espaço para virar</span>
+    </div>
+    <div class="rate-row hidden" id="rate-row">
+      <button class="rate-btn again" onclick="rateCard(0)">😵 Não sei</button>
+      <button class="rate-btn hard" onclick="rateCard(3)">😓 Difícil</button>
+      <button class="rate-btn good" onclick="rateCard(4)">🙂 Médio</button>
+      <button class="rate-btn easy" onclick="rateCard(5)">😄 Fácil</button>
+    </div>
+    <div class="study-tools">
+      <button class="btn secondary sm" onclick="openCardEditor('${card.id}')">✏️ Editar</button>
+      <button class="btn danger sm" onclick="deleteDuringStudy('${card.id}')">🗑️ Excluir</button>
+      <button class="btn secondary sm" onclick="toggleFavDuringStudy('${card.id}')">${card.favorito?'⭐ Favorito':'☆ Favoritar'}</button>
+    </div>`;
+  document.getElementById('flip-card').addEventListener('click',flipCard);
+}
+
+function flipCard(){
+  const card=data.cards[studyQueue[studyIdx].id];
+  if(!card)return;
+  studyFlipped=!studyFlipped;
+  const contentEl=document.getElementById('flash-content');
+  const lblEl=document.querySelector('#flip-card .side-lbl');
+  const rateRow=document.getElementById('rate-row');
+  if(studyFlipped){
+    contentEl.textContent=card.resposta;
+    contentEl.classList.add('answer-content');
+    lblEl.textContent='Resposta';
+    rateRow.classList.remove('hidden');
+  }else{
+    contentEl.textContent=card.pergunta;
+    contentEl.classList.remove('answer-content');
+    lblEl.textContent='Pergunta';
+    rateRow.classList.add('hidden');
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('screen-study').classList.contains('active'))return;
+  if(studyIdx>=studyQueue.length)return;
+  if(e.code==='Space'){e.preventDefault();flipCard();}
+  if(studyFlipped){
+    if(e.key==='1')rateCard(0);
+    if(e.key==='2')rateCard(3);
+    if(e.key==='3')rateCard(4);
+    if(e.key==='4')rateCard(5);
+  }
+});
+
+function rateCard(quality){
+  const card=data.cards[studyQueue[studyIdx].id];
+  if(!card)return;
+  applySM2(card,quality);
+  studySession.total++;
+  if(quality>=4)studySession.correct++;
+  if(quality>=4)card.acertos=(card.acertos||0)+1;else card.erros=(card.erros||0)+1;
+  card.ultimaRevisao=Date.now();
+  saveData();
+  studyIdx++;
+  renderStudyCard();
+}
+
+function applySM2(card,quality){
+  card.repetitions=card.repetitions||0;
+  card.ease=card.ease||2.5;
+  card.interval=card.interval||0;
+  if(quality<3){
+    card.repetitions=0;
+    card.interval=1;
+  }else{
+    if(card.repetitions===0)card.interval=1;
+    else if(card.repetitions===1)card.interval=6;
+    else card.interval=Math.round(card.interval*card.ease);
+    card.repetitions++;
+  }
+  card.ease=card.ease+(0.1-(5-quality)*(0.08+(5-quality)*0.02));
+  if(card.ease<1.3)card.ease=1.3;
+  card.proximaRevisao=Date.now()+card.interval*24*60*60*1000;
+}
+
+function deleteDuringStudy(cardId){
+  if(!confirm('Excluir este flashcard durante o estudo?'))return;
+  delete data.cards[cardId];
+  saveData();
+  studyQueue.splice(studyIdx,1);
+  toast('Card excluído','var(--red)');
+  renderStudyCard();
+}
+function toggleFavDuringStudy(cardId){
+  const c=data.cards[cardId];if(!c)return;
+  c.favorito=!c.favorito;saveData();renderStudyCard();
+}
+
+/* ======================= ESTATÍSTICAS ======================= */
+function renderStats(){
+  populateDeckSelects();
+  const sel=document.getElementById('stats-deck-select');
+  sel.onchange=renderStatsContent;
+  renderStatsContent();
+}
+function renderStatsContent(){
+  const deckId=document.getElementById('stats-deck-select').value;
+  const el=document.getElementById('stats-content');
+  if(!deckId){el.innerHTML=`<div class="empty"><div class="ico">📊</div><p>Crie um deck para ver estatísticas.</p></div>`;return;}
+  const cards=cardsOfDeck(deckId);
+  const due=dueCards(deckId).length;
+  const totalAcertos=cards.reduce((a,c)=>a+(c.acertos||0),0);
+  const totalErros=cards.reduce((a,c)=>a+(c.erros||0),0);
+  const totalRevisoes=totalAcertos+totalErros;
+  const pct=totalRevisoes?Math.round(100*totalAcertos/totalRevisoes):0;
+  const byDiff={fácil:0,médio:0,difícil:0};
+  cards.forEach(c=>{byDiff[c.dificuldade||'médio']=(byDiff[c.dificuldade||'médio']||0)+1;});
+  const max=Math.max(1,...Object.values(byDiff));
+  el.innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="n">${cards.length}</div><div class="l">Total de cards</div></div>
+      <div class="stat-tile"><div class="n">${due}</div><div class="l">Para revisar</div></div>
+      <div class="stat-tile"><div class="n">${totalRevisoes}</div><div class="l">Revisões feitas</div></div>
+      <div class="stat-tile"><div class="n">${pct}%</div><div class="l">Taxa de acerto</div></div>
+    </div>
+    <div class="card-box">
+      <div style="font-weight:900;font-size:13px;margin-bottom:14px">Distribuição por dificuldade</div>
+      ${['fácil','médio','difícil'].map(k=>`
+        <div class="bar-row">
+          <div class="l">${k}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(100*byDiff[k]/max)}%;background:var(--${diffColor(k)==='green'?'green':diffColor(k)==='red'?'red':'orange'})"></div></div>
+          <div class="v">${byDiff[k]}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ======================= UTIL ======================= */
+function esc(str){
+  return (str||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ======================= INIT ======================= */
+applyTheme();
+renderDecks();
 </script>
-
 </body>
 </html>
