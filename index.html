@@ -176,6 +176,7 @@ label.lbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:upper
       <button class="tab-btn active" data-tab="decks">📚 Decks</button>
       <button class="tab-btn" data-tab="import">📥 Importar PDF</button>
       <button class="tab-btn" data-tab="study">🧠 Estudar</button>
+      <button class="tab-btn" data-tab="questoes">📝 Questões de Prova</button>
       <button class="tab-btn" data-tab="stats">📊 Estatísticas</button>
     </div>
     <button class="icon-btn" id="theme-toggle" title="Alternar tema">🌙</button>
@@ -263,6 +264,34 @@ label.lbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:upper
     <div id="study-area"></div>
   </div>
 
+  <!-- ===== QUESTÕES DE PROVA ===== -->
+  <div class="screen" id="screen-questoes">
+    <h2 class="screen-title">Questões de Prova</h2>
+    <p class="screen-sub">Múltipla escolha estilo ENARE, SESPE e REVALIDA (dificuldade moderada a alta), geradas por IA a partir dos flashcards do deck.</p>
+
+    <div class="deck-ctx">
+      <label class="lbl" style="margin:0">Deck</label>
+      <select class="inp" id="quest-deck-select"></select>
+    </div>
+
+    <div class="card-box" style="margin-bottom:16px">
+      <div class="step-title"><span class="num">✨</span> Gerar novas questões</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label class="lbl" style="margin:0">Quantidade</label>
+        <input type="number" class="inp" id="quest-count" value="15" min="1" max="60" style="width:80px">
+        <button class="btn" id="gen-questions-btn">🎯 Gerar Questões</button>
+        <span id="quest-gen-status" style="font-size:12.5px;color:var(--muted)"></span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <button class="btn secondary" id="start-quiz-btn">▶️ Praticar Questões</button>
+    </div>
+
+    <div id="quiz-area"></div>
+    <div id="quest-list-wrap" style="margin-top:24px"></div>
+  </div>
+
   <!-- ===== STATS ===== -->
   <div class="screen" id="screen-stats">
     <h2 class="screen-title">Estatísticas</h2>
@@ -296,7 +325,7 @@ function loadData(){
     const raw=localStorage.getItem(STORAGE_KEY);
     if(raw)return JSON.parse(raw);
   }catch(e){}
-  return {decks:{},cards:{},settings:{apiKey:'',model:'gemini-2.0-flash',theme:'light'}};
+  return {decks:{},cards:{},questions:{},settings:{apiKey:'',model:'gemini-2.0-flash',theme:'light'}};
 }
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
@@ -330,6 +359,7 @@ function showTab(name){
   if(name==='decks')renderDecks();
   if(name==='import')renderImportScreen();
   if(name==='study')renderStudySetup();
+  if(name==='questoes')renderQuestoesScreen();
   if(name==='stats')renderStats();
 }
 
@@ -404,7 +434,7 @@ function exportDeck(id){
 function populateDeckSelects(){
   const decks=deckList();
   const opts=decks.length?decks.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join(''):`<option value="">Nenhum deck</option>`;
-  ['import-deck-select','study-deck-select','stats-deck-select'].forEach(selId=>{
+  ['import-deck-select','study-deck-select','quest-deck-select','stats-deck-select'].forEach(selId=>{
     const el=document.getElementById(selId);
     const prev=el.value;
     el.innerHTML=opts;
@@ -681,6 +711,24 @@ function updateCharCount(){
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
+async function withRetry(fn,onRetry,maxRetries){
+  maxRetries=maxRetries||3;
+  let lastErr;
+  for(let attempt=0;attempt<=maxRetries;attempt++){
+    try{
+      return await fn();
+    }catch(e){
+      lastErr=e;
+      const retryable=e.status===429||e.status===503||/high demand|overloaded|try again later/i.test(e.message);
+      if(!retryable||attempt===maxRetries)throw e;
+      const wait=3000*Math.pow(2,attempt);
+      if(onRetry)onRetry(attempt+1,maxRetries,wait);
+      await sleep(wait);
+    }
+  }
+  throw lastErr;
+}
+
 function splitIntoChunks(text,maxChars){
   const paragraphs=text.split(/\n\s*\n/);
   const chunks=[];
@@ -720,7 +768,9 @@ document.getElementById('generate-btn').addEventListener('click',async()=>{
   for(let i=0;i<chunks.length;i++){
     statusEl.textContent=`🤖 Gerando flashcards... parte ${i+1}/${chunks.length} (${allCards.length} cards até agora)`;
     try{
-      const cards=await callGeminiForFlashcards(chunks[i]);
+      const cards=await withRetry(()=>callGeminiForFlashcards(chunks[i]),(attempt,max,wait)=>{
+        statusEl.textContent=`⏳ Parte ${i+1}/${chunks.length} sobrecarregada, tentando novamente em ${Math.round(wait/1000)}s (${attempt}/${max})...`;
+      });
       allCards=allCards.concat(cards);
     }catch(e){
       failedChunks++;
@@ -792,7 +842,9 @@ ${texto}
   const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const json=await res.json();
   if(!res.ok){
-    throw new Error(json?.error?.message||`Erro HTTP ${res.status}`);
+    const err=new Error(json?.error?.message||`Erro HTTP ${res.status}`);
+    err.status=res.status;
+    throw err;
   }
   const text=json?.candidates?.[0]?.content?.parts?.[0]?.text;
   if(!text)throw new Error('Resposta vazia da IA (verifique sua chave ou cota).');
@@ -926,11 +978,18 @@ function renderStudyCard(){
       <button class="rate-btn easy" onclick="rateCard(5)">😄 Fácil</button>
     </div>
     <div class="study-tools">
+      <button class="btn secondary sm" onclick="goToPrevCard()" ${studyIdx===0?'disabled':''}>⬅️ Voltar</button>
       <button class="btn secondary sm" onclick="openCardEditor('${card.id}')">✏️ Editar</button>
       <button class="btn danger sm" onclick="deleteDuringStudy('${card.id}')">🗑️ Excluir</button>
       <button class="btn secondary sm" onclick="toggleFavDuringStudy('${card.id}')">${card.favorito?'⭐ Favorito':'☆ Favoritar'}</button>
     </div>`;
   document.getElementById('flip-card').addEventListener('click',flipCard);
+}
+
+function goToPrevCard(){
+  if(studyIdx<=0)return;
+  studyIdx--;
+  renderStudyCard();
 }
 
 function flipCard(){
@@ -1008,6 +1067,206 @@ function toggleFavDuringStudy(cardId){
   const c=data.cards[cardId];if(!c)return;
   c.favorito=!c.favorito;saveData();renderStudyCard();
 }
+
+/* ======================= QUESTÕES DE PROVA ======================= */
+function questionsOfDeck(deckId){return Object.values(data.questions||{}).filter(q=>q.deckId===deckId);}
+
+function renderQuestoesScreen(){
+  if(!data.questions)data.questions={};
+  populateDeckSelects();
+  document.getElementById('quest-deck-select').onchange=()=>{renderQuestList();document.getElementById('quiz-area').innerHTML='';};
+  document.getElementById('quiz-area').innerHTML='';
+  renderQuestList();
+}
+
+document.getElementById('gen-questions-btn').addEventListener('click',async()=>{
+  const deckId=document.getElementById('quest-deck-select').value;
+  if(!deckId){toast('Crie ou selecione um deck primeiro','var(--red)');return;}
+  if(!data.settings.apiKey){toast('Configure sua chave da API Gemini primeiro (⚙️)','var(--red)');return;}
+  const cards=cardsOfDeck(deckId);
+  if(!cards.length){toast('Esse deck não tem flashcards ainda — crie ou importe alguns primeiro','var(--red)');return;}
+  const n=Math.max(1,Math.min(60,parseInt(document.getElementById('quest-count').value)||15));
+  const btn=document.getElementById('gen-questions-btn');
+  const statusEl=document.getElementById('quest-gen-status');
+  btn.disabled=true;
+  statusEl.textContent='🤖 Gerando questões de prova...';
+  try{
+    const questoes=await withRetry(()=>callGeminiForQuestions(cards,n),(attempt,max,wait)=>{
+      statusEl.textContent=`⏳ Sobrecarregado, tentando novamente em ${Math.round(wait/1000)}s (${attempt}/${max})...`;
+    });
+    if(!data.questions)data.questions={};
+    questoes.forEach(q=>{
+      const id='quest_'+genId();
+      data.questions[id]={id,deckId,enunciado:q.enunciado||'',alternativas:q.alternativas||{},correta:(q.correta||'A').toUpperCase(),explicacao:q.explicacao||'',criacao:Date.now()};
+    });
+    saveData();
+    statusEl.textContent=`✅ ${questoes.length} questões geradas!`;
+    renderQuestList();
+  }catch(e){
+    statusEl.textContent='';
+    toast('Erro ao gerar questões: '+e.message,'var(--red)',8000);
+  }
+  btn.disabled=false;
+});
+
+async function callGeminiForQuestions(cards,n){
+  let topics=cards.map(c=>`- ${c.pergunta} | Resposta base: ${c.resposta}${c.categoria?` | Categoria: ${c.categoria}`:''}`).join('\n');
+  if(topics.length>CHUNK_MAX_CHARS)topics=topics.slice(0,CHUNK_MAX_CHARS);
+
+  const prompt=`Você é um especialista em elaborar questões de prova para os exames ENARE, SESPE e REVALIDA (provas brasileiras de residência médica e revalidação de diploma).
+
+Com base nos tópicos de estudo abaixo (extraídos de flashcards), crie ${n} questões de múltipla escolha no estilo dessas provas.
+
+Regras:
+1. Cada questão deve ter um enunciado claro, com vinheta clínica quando fizer sentido, e 5 alternativas (A a E), apenas uma correta.
+2. Dificuldade moderada a alta, como nas provas reais — evite perguntas triviais ou puramente decorativas.
+3. Use seu conhecimento médico completo e atualizado sobre os temas — não se limite ao conteúdo literal dos flashcards; aprofunde, contextualize clinicamente e explore diagnósticos diferenciais, condutas e nuances relevantes.
+4. Inclua uma breve explicação da resposta correta (por que ela é certa e, se útil, por que as outras estão erradas).
+5. Distribua as questões entre os diferentes tópicos listados, sem repetir excessivamente o mesmo tema.
+
+Tópicos disponíveis:
+${topics}`;
+
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(data.settings.model)}:generateContent?key=${encodeURIComponent(data.settings.apiKey)}`;
+  const body={
+    contents:[{parts:[{text:prompt}]}],
+    generationConfig:{
+      temperature:0.4,
+      maxOutputTokens:8192,
+      responseMimeType:'application/json',
+      responseSchema:{
+        type:'OBJECT',
+        properties:{
+          questoes:{
+            type:'ARRAY',
+            items:{
+              type:'OBJECT',
+              properties:{
+                enunciado:{type:'STRING'},
+                alternativas:{
+                  type:'OBJECT',
+                  properties:{A:{type:'STRING'},B:{type:'STRING'},C:{type:'STRING'},D:{type:'STRING'},E:{type:'STRING'}},
+                  required:['A','B','C','D','E']
+                },
+                correta:{type:'STRING'},
+                explicacao:{type:'STRING'}
+              },
+              required:['enunciado','alternativas','correta','explicacao']
+            }
+          }
+        },
+        required:['questoes']
+      }
+    }
+  };
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const json=await res.json();
+  if(!res.ok){
+    const err=new Error(json?.error?.message||`Erro HTTP ${res.status}`);
+    err.status=res.status;
+    throw err;
+  }
+  const text=json?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text)throw new Error('Resposta vazia da IA (verifique sua chave ou cota).');
+  let parsed=null;
+  try{parsed=JSON.parse(text);}
+  catch(e){
+    const m=text.match(/\{[\s\S]*\}/);
+    if(m){try{parsed=JSON.parse(m[0]);}catch(e2){}}
+  }
+  const questoes=parsed&&Array.isArray(parsed.questoes)?parsed.questoes:[];
+  if(!questoes.length)throw new Error('Não foi possível interpretar a resposta da IA. Início da resposta: '+text.slice(0,300));
+  return questoes;
+}
+
+function renderQuestList(){
+  const deckId=document.getElementById('quest-deck-select').value;
+  const wrap=document.getElementById('quest-list-wrap');
+  if(!deckId){wrap.innerHTML='';return;}
+  const qs=questionsOfDeck(deckId);
+  wrap.innerHTML=`<div class="card-box">
+    <div style="font-weight:900;font-size:13px;margin-bottom:10px">🗂️ ${qs.length} questão(ões) geradas neste deck</div>
+    <div class="cards-grid">${qs.length?qs.map(q=>`
+      <div class="mini-card">
+        <div class="q">${esc(q.enunciado)}</div>
+        <div class="a">Correta: ${esc(q.correta)}) ${esc(q.alternativas[q.correta]||'')}</div>
+        <div class="row"><button class="btn danger sm" onclick="deleteQuestion('${q.id}')">🗑️</button></div>
+      </div>`).join(''):'<div class="empty" style="grid-column:1/-1"><div class="ico">📝</div><p>Nenhuma questão gerada ainda. Use o formulário acima.</p></div>'}</div>
+  </div>`;
+}
+
+function deleteQuestion(id){
+  if(!confirm('Excluir esta questão?'))return;
+  delete data.questions[id];
+  saveData();
+  renderQuestList();
+}
+
+let quizQueue=[];
+let quizIdx=0;
+let quizSession={total:0,correct:0};
+let quizAnswered=false;
+
+document.getElementById('start-quiz-btn').addEventListener('click',startQuiz);
+
+function startQuiz(){
+  const deckId=document.getElementById('quest-deck-select').value;
+  if(!deckId){toast('Selecione um deck','var(--red)');return;}
+  quizQueue=questionsOfDeck(deckId).slice();
+  shuffleArray(quizQueue);
+  quizIdx=0;
+  quizSession={total:0,correct:0};
+  if(!quizQueue.length){
+    document.getElementById('quiz-area').innerHTML=`<div class="empty"><div class="ico">📝</div><p>Nenhuma questão gerada ainda para esse deck. Gere questões acima primeiro.</p></div>`;
+    return;
+  }
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion(){
+  const area=document.getElementById('quiz-area');
+  if(quizIdx>=quizQueue.length){
+    const pct=quizSession.total?Math.round(100*quizSession.correct/quizSession.total):0;
+    area.innerHTML=`<div class="study-done">
+      <div class="ico">🎉</div><h3>Quiz concluído!</h3>
+      <p style="color:var(--muted);margin-top:8px">${quizSession.total} questões · ${pct}% de acerto</p>
+      <button class="btn" style="margin-top:16px" onclick="startQuiz()">🔁 Praticar de novo</button>
+    </div>`;
+    return;
+  }
+  const q=quizQueue[quizIdx];
+  quizAnswered=false;
+  area.innerHTML=`
+    <div class="progress-wrap" style="max-width:640px;margin-left:auto;margin-right:auto">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.round(100*quizIdx/quizQueue.length)}%"></div></div>
+      <div class="progress-txt">${quizIdx+1} / ${quizQueue.length}</div>
+    </div>
+    <div class="card-box" style="max-width:640px;margin:14px auto 0">
+      <div style="font-weight:700;font-size:14.5px;line-height:1.6;margin-bottom:16px;white-space:pre-wrap">${esc(q.enunciado)}</div>
+      <div id="quiz-alts" style="display:flex;flex-direction:column;gap:8px">
+        ${['A','B','C','D','E'].map(l=>`<button class="btn secondary" style="text-align:left" onclick="answerQuiz('${l}')" data-letter="${l}">${l}) ${esc(q.alternativas[l]||'')}</button>`).join('')}
+      </div>
+      <div id="quiz-feedback" style="margin-top:14px;font-size:13px"></div>
+      <div style="margin-top:14px" id="quiz-next-wrap" class="hidden"><button class="btn" onclick="nextQuizQuestion()">Próxima ➜</button></div>
+    </div>`;
+}
+
+function answerQuiz(letter){
+  if(quizAnswered)return;
+  quizAnswered=true;
+  const q=quizQueue[quizIdx];
+  const correct=letter===q.correta;
+  quizSession.total++;
+  if(correct)quizSession.correct++;
+  document.querySelectorAll('#quiz-alts button').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.letter===q.correta){b.style.borderColor='var(--green)';b.style.color='var(--green)';}
+    if(b.dataset.letter===letter&&!correct){b.style.borderColor='var(--red)';b.style.color='var(--red)';}
+  });
+  document.getElementById('quiz-feedback').innerHTML=`<span class="badge ${correct?'green':'red'}" style="margin-bottom:8px;display:inline-block">${correct?'✓ Correto':'✗ Incorreto'}</span><div style="color:var(--muted);margin-top:6px">${esc(q.explicacao)}</div>`;
+  document.getElementById('quiz-next-wrap').classList.remove('hidden');
+}
+function nextQuizQuestion(){quizIdx++;renderQuizQuestion();}
 
 /* ======================= ESTATÍSTICAS ======================= */
 function renderStats(){
